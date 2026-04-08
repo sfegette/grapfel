@@ -154,8 +154,10 @@ private struct CopyButton: View {
         // Remove fenced code blocks (keep content, drop fences + language tag)
         out = out.replacingOccurrences(of: #"```[^\n]*\n"#, with: "", options: .regularExpression)
         out = out.replacingOccurrences(of: "```", with: "")
-        // Remove ATX headers
-        out = out.replacingOccurrences(of: #"^#{1,6}\s+"#, with: "", options: [.regularExpression, .anchorsMatchLines])
+        // Remove ATX headers — anchorsMatchLines requires NSRegularExpression directly
+        if let re = try? NSRegularExpression(pattern: #"^#{1,6}\s+"#, options: .anchorsMatchLines) {
+            out = re.stringByReplacingMatches(in: out, range: NSRange(out.startIndex..., in: out), withTemplate: "")
+        }
         // Remove bold / italic (**, *, __, _)
         out = out.replacingOccurrences(of: #"\*\*(.+?)\*\*"#, with: "$1", options: .regularExpression)
         out = out.replacingOccurrences(of: #"__(.+?)__"#,     with: "$1", options: .regularExpression)
