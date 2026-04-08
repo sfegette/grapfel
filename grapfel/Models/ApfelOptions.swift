@@ -6,7 +6,7 @@ struct ApfelOptions: Equatable {
     var maxTokens: Int = 2048           // --max-tokens
     var seed: Int? = nil                // --seed (nil = not set)
     var permissive: Bool = false        // --permissive
-    var streaming: Bool = true          // --stream
+    var streaming: Bool = false         // --stream
     var systemPrompt: String = ""       // -s / --system
     var contextStrategy: ContextStrategy = .newestFirst  // --context-strategy
     var contextMaxTurns: Int? = nil     // --context-max-turns

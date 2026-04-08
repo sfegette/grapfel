@@ -21,6 +21,18 @@ struct PromptInputView: View {
                         }
                     }
                 )
+                .onKeyPress(.return, phases: .down) { press in
+                    if press.modifiers.contains(.command) {
+                        // ⌘+Enter → insert newline
+                        viewModel.prompt += "\n"
+                        return .handled
+                    }
+                    // Enter → send (if prompt is non-empty and not already loading)
+                    let trimmed = viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !trimmed.isEmpty, !viewModel.isLoading else { return .handled }
+                    Task { await viewModel.send() }
+                    return .handled
+                }
 
             HStack {
                 Button(action: viewModel.pickFiles) {
@@ -44,7 +56,6 @@ struct PromptInputView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isLoading)
-                .keyboardShortcut(.return, modifiers: .command)
             }
         }
         .padding(16)

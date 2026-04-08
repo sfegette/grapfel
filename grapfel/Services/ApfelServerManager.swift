@@ -1,12 +1,12 @@
 import Foundation
 
 /// Manages the lifecycle of `apfel --serve` as a background process.
-/// Phase 2 implementation.
 actor ApfelServerManager {
     static let shared = ApfelServerManager()
 
     private var process: Process?
     private let port: Int
+    private var intentionalStop = false
 
     init(port: Int = 11434) {
         self.port = port
@@ -20,29 +20,50 @@ actor ApfelServerManager {
 
     func start() async throws {
         guard !isRunning else { return }
+        intentionalStop = false
+
+        // If something is already healthy on this port (e.g. orphaned process from
+        // a previous Xcode debug session killed via SIGKILL), adopt it and skip spawn.
+        if await healthCheck() { return }
+
         let binary = try findBinary()
         let p = Process()
         p.executableURL = binary
-        p.arguments = ["--serve", "--port", "\(port)", "--quiet"]
+        p.arguments = ["--serve", "--port", "\(port)"]
+        p.terminationHandler = { [weak self] _ in
+            Task { await self?.handleCrash() }
+        }
         try p.run()
         process = p
 
         // Give the server a moment to bind
         try await Task.sleep(for: .milliseconds(500))
         guard await healthCheck() else {
+            // Mark intentional so terminationHandler doesn't restart
+            intentionalStop = true
             p.terminate()
             process = nil
+            intentionalStop = false  // reset for future start() calls
             throw ApfelError.serverStartFailed
         }
     }
 
     func stop() {
+        intentionalStop = true
         process?.terminate()
         process = nil
     }
 
+    private func handleCrash() async {
+        guard !intentionalStop else { return }
+        process = nil
+        // Back off 1 s before restart to avoid tight restart loops
+        try? await Task.sleep(for: .seconds(1))
+        try? await start()
+    }
+
     func healthCheck() async -> Bool {
-        guard let url = URL(string: "http://localhost:\(port)/health") else { return false }
+        guard let url = URL(string: "http://127.0.0.1:\(port)/health") else { return false }
         do {
             let (_, response) = try await URLSession.shared.data(from: url)
             return (response as? HTTPURLResponse)?.statusCode == 200
@@ -54,18 +75,17 @@ actor ApfelServerManager {
     // MARK: - Binary discovery
 
     func findBinary() throws -> URL {
+        // Search order: app bundle → /usr/local/bin → /opt/homebrew/bin → `which apfel`
         let candidates = [
             Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/apfel"),
             URL(fileURLWithPath: "/usr/local/bin/apfel"),
             URL(fileURLWithPath: "/opt/homebrew/bin/apfel"),
         ]
-        // Also try `which apfel` via shell
-        if let pathResult = shellWhich("apfel") {
-            candidates.first.map { _ in } // just to use the result below
-            return URL(fileURLWithPath: pathResult)
-        }
         for url in candidates where FileManager.default.fileExists(atPath: url.path) {
             return url
+        }
+        if let pathResult = shellWhich("apfel") {
+            return URL(fileURLWithPath: pathResult)
         }
         throw ApfelError.binaryNotFound
     }

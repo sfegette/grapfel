@@ -1,17 +1,23 @@
 import AppKit
 import SwiftUI
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+@MainActor class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
+    private var globalHotKeyMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
         setupPopover()
+        setupGlobalHotKey()
+        Task { try? await ApfelServerManager.shared.start() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        // TODO: Phase 2 — stop apfel server process here
+        if let monitor = globalHotKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+        Task { await ApfelServerManager.shared.stop() }
     }
 
     // MARK: - Setup
@@ -33,6 +39,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.behavior = .transient  // auto-dismiss on click-away
         popover.animates = true
         popover.contentViewController = NSHostingController(rootView: ContentView())
+    }
+
+    // MARK: - Global hot key (⌘⇧Space — configurable in Phase 7 Settings)
+
+    private func setupGlobalHotKey() {
+        globalHotKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            // keyCode 49 = Space; require ⌘⇧, no other modifiers
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            guard event.keyCode == 49, flags == [.command, .shift] else { return }
+            Task { @MainActor in self?.togglePopover(nil) }
+        }
     }
 
     // MARK: - Actions

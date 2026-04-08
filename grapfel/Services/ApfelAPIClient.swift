@@ -7,7 +7,7 @@ struct ApfelAPIClient {
     private let session: URLSession
 
     init(port: Int = 11434, session: URLSession = .shared) {
-        self.baseURL = URL(string: "http://localhost:\(port)/v1")!
+        self.baseURL = URL(string: "http://127.0.0.1:\(port)/v1")!
         self.session = session
     }
 
@@ -54,9 +54,12 @@ struct ApfelAPIClient {
         var request = URLRequest(url: baseURL.appendingPathComponent("chat/completions"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if stream {
+            request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        }
 
         var body: [String: Any] = [
-            "model": "apple-intelligence",
+            "model": "apple-foundationmodel",
             "messages": messages.map { ["role": $0.role.rawValue, "content": $0.content] },
             "temperature": options.temperature,
             "max_tokens": options.maxTokens,
