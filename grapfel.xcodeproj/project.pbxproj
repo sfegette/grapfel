@@ -1,0 +1,615 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1E3765258397415995235C0F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8827AE87C86AC8402972D3C1 /* AppDelegate.swift */; };
+		1EA3435E6DB7B94ED437B0A6 /* PromptInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */; };
+		518B5EABF4269570F2B1F890 /* GrapfelUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE3E4A9DDBF85AE24B2BD96 /* GrapfelUITests.swift */; };
+		57C4DDA1195B3B2409E1B197 /* ChatViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */; };
+		6564BAD04BDA9E8379DEF5E1 /* GrapfelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112960AEB63D0BC17D5FC70 /* GrapfelApp.swift */; };
+		70B2BB5B3AEB14AAC9138B53 /* ApfelOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F736F3FB827065B3C4816602 /* ApfelOptions.swift */; };
+		7AE4ABFB8A4F126D5CFCBA81 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */; };
+		84BDDDC25B80F04BC30F9C67 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08718FE68CCF160787C1F1BB /* Assets.xcassets */; };
+		89D92788254FDE53AA885A21 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */; };
+		99A0F09EC199EEAF2888B5EB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997EC77C475EF15B1182C5EE /* ContentView.swift */; };
+		C4CE039D44D87DE693E31968 /* ApfelOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */; };
+		CD9575A8940A9D767B10191C /* ApfelAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */; };
+		D3121FD34ECF5DB9E0C46D77 /* ResponseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2237DE5EFFA3B82276B5024A /* ResponseView.swift */; };
+		E9F149D694C371AB32285A57 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3123F4D8603FDF19ED65F935 /* SettingsView.swift */; };
+		F94925494A845F74316BE21A /* OptionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */; };
+		FC105FD232632716A4A4A599 /* ApfelServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1BB28C15EAAC22B57CE4FDC2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AB35F9A315F008A34EF0EED2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 64BA245C7BBA87212BF4BCE1;
+			remoteInfo = grapfel;
+		};
+		CB00FC8FAA5690D2F54533AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AB35F9A315F008A34EF0EED2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 64BA245C7BBA87212BF4BCE1;
+			remoteInfo = grapfel;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		08718FE68CCF160787C1F1BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1BC962889BF1CDC146537434 /* grapfelUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = grapfelUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2237DE5EFFA3B82276B5024A /* ResponseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseView.swift; sourceTree = "<group>"; };
+		3112960AEB63D0BC17D5FC70 /* GrapfelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrapfelApp.swift; sourceTree = "<group>"; };
+		3123F4D8603FDF19ED65F935 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		38583EC51D936B29873F377E /* grapfel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = grapfel.entitlements; sourceTree = "<group>"; };
+		4B53DF7F8F79B3E5A184AB04 /* grapfel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = grapfel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelAPIClient.swift; sourceTree = "<group>"; };
+		85A92192171D0CCF4FB79DFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		8827AE87C86AC8402972D3C1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		997EC77C475EF15B1182C5EE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelServerManager.swift; sourceTree = "<group>"; };
+		99B9BDAB29393037E208C856 /* grapfelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = grapfelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CE3E4A9DDBF85AE24B2BD96 /* GrapfelUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrapfelUITests.swift; sourceTree = "<group>"; };
+		B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptInputView.swift; sourceTree = "<group>"; };
+		B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptionsTests.swift; sourceTree = "<group>"; };
+		CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelTests.swift; sourceTree = "<group>"; };
+		D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsPanel.swift; sourceTree = "<group>"; };
+		F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		F736F3FB827065B3C4816602 /* ApfelOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptions.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0C7383123C3F8BE31AFCA753 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */,
+				9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		24DB626420D7B3C826D4857E /* grapfel */ = {
+			isa = PBXGroup;
+			children = (
+				5294729938473D0867B48F33 /* App */,
+				BA08C28F892A9E9030ED0DF9 /* Models */,
+				2BF0EA63581A8BADA047A9D9 /* Resources */,
+				0C7383123C3F8BE31AFCA753 /* Services */,
+				5639D711B7C0598690190FCE /* ViewModels */,
+				53C1D1FCFBD0490A77833E05 /* Views */,
+				38583EC51D936B29873F377E /* grapfel.entitlements */,
+			);
+			path = grapfel;
+			sourceTree = "<group>";
+		};
+		2BF0EA63581A8BADA047A9D9 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				08718FE68CCF160787C1F1BB /* Assets.xcassets */,
+				85A92192171D0CCF4FB79DFC /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		4967043DC3C9A2A6232FD552 = {
+			isa = PBXGroup;
+			children = (
+				24DB626420D7B3C826D4857E /* grapfel */,
+				B74A2F1C7C3FFBBB5A2F19F6 /* grapfelTests */,
+				D1301A6C7D3129430C36C1A3 /* grapfelUITests */,
+				72ECBEA6DA6E4EBAB47B4DD0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		5294729938473D0867B48F33 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				8827AE87C86AC8402972D3C1 /* AppDelegate.swift */,
+				3112960AEB63D0BC17D5FC70 /* GrapfelApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		53C1D1FCFBD0490A77833E05 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				997EC77C475EF15B1182C5EE /* ContentView.swift */,
+				D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */,
+				B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */,
+				2237DE5EFFA3B82276B5024A /* ResponseView.swift */,
+				3123F4D8603FDF19ED65F935 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		5639D711B7C0598690190FCE /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		72ECBEA6DA6E4EBAB47B4DD0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4B53DF7F8F79B3E5A184AB04 /* grapfel.app */,
+				99B9BDAB29393037E208C856 /* grapfelTests.xctest */,
+				1BC962889BF1CDC146537434 /* grapfelUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B74A2F1C7C3FFBBB5A2F19F6 /* grapfelTests */ = {
+			isa = PBXGroup;
+			children = (
+				B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */,
+				CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */,
+			);
+			path = grapfelTests;
+			sourceTree = "<group>";
+		};
+		BA08C28F892A9E9030ED0DF9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F736F3FB827065B3C4816602 /* ApfelOptions.swift */,
+				F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D1301A6C7D3129430C36C1A3 /* grapfelUITests */ = {
+			isa = PBXGroup;
+			children = (
+				9CE3E4A9DDBF85AE24B2BD96 /* GrapfelUITests.swift */,
+			);
+			path = grapfelUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		58166ADA6C88656D5253AAE6 /* grapfelTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C7A25913F9FF08AC1D7C2FF7 /* Build configuration list for PBXNativeTarget "grapfelTests" */;
+			buildPhases = (
+				0E838867E3B697A69D75B9C9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				021DF6B94F6F8118AE695F28 /* PBXTargetDependency */,
+			);
+			name = grapfelTests;
+			packageProductDependencies = (
+			);
+			productName = grapfelTests;
+			productReference = 99B9BDAB29393037E208C856 /* grapfelTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		64BA245C7BBA87212BF4BCE1 /* grapfel */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2A6046D21D6B709D0C13BE80 /* Build configuration list for PBXNativeTarget "grapfel" */;
+			buildPhases = (
+				FF66A42D08CA3C0417ED41E4 /* Sources */,
+				FDA25603BADD96A4268C637F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = grapfel;
+			packageProductDependencies = (
+			);
+			productName = grapfel;
+			productReference = 4B53DF7F8F79B3E5A184AB04 /* grapfel.app */;
+			productType = "com.apple.product-type.application";
+		};
+		769E11985ADE9F32E09027FB /* grapfelUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6814C7792DE29EEA656D47F4 /* Build configuration list for PBXNativeTarget "grapfelUITests" */;
+			buildPhases = (
+				F9ED9C704EBB547F42C8EF9E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				37FEE5803BF21814EE18A63D /* PBXTargetDependency */,
+			);
+			name = grapfelUITests;
+			packageProductDependencies = (
+			);
+			productName = grapfelUITests;
+			productReference = 1BC962889BF1CDC146537434 /* grapfelUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AB35F9A315F008A34EF0EED2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					58166ADA6C88656D5253AAE6 = {
+						ProvisioningStyle = Automatic;
+					};
+					64BA245C7BBA87212BF4BCE1 = {
+						ProvisioningStyle = Automatic;
+					};
+					769E11985ADE9F32E09027FB = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = 64BA245C7BBA87212BF4BCE1;
+					};
+				};
+			};
+			buildConfigurationList = 0F37FDD6AE4E2A2ECD3EE03D /* Build configuration list for PBXProject "grapfel" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 4967043DC3C9A2A6232FD552;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 72ECBEA6DA6E4EBAB47B4DD0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				64BA245C7BBA87212BF4BCE1 /* grapfel */,
+				58166ADA6C88656D5253AAE6 /* grapfelTests */,
+				769E11985ADE9F32E09027FB /* grapfelUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FDA25603BADD96A4268C637F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84BDDDC25B80F04BC30F9C67 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0E838867E3B697A69D75B9C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C4CE039D44D87DE693E31968 /* ApfelOptionsTests.swift in Sources */,
+				57C4DDA1195B3B2409E1B197 /* ChatViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9ED9C704EBB547F42C8EF9E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				518B5EABF4269570F2B1F890 /* GrapfelUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF66A42D08CA3C0417ED41E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CD9575A8940A9D767B10191C /* ApfelAPIClient.swift in Sources */,
+				70B2BB5B3AEB14AAC9138B53 /* ApfelOptions.swift in Sources */,
+				FC105FD232632716A4A4A599 /* ApfelServerManager.swift in Sources */,
+				1E3765258397415995235C0F /* AppDelegate.swift in Sources */,
+				7AE4ABFB8A4F126D5CFCBA81 /* ChatMessage.swift in Sources */,
+				89D92788254FDE53AA885A21 /* ChatViewModel.swift in Sources */,
+				99A0F09EC199EEAF2888B5EB /* ContentView.swift in Sources */,
+				6564BAD04BDA9E8379DEF5E1 /* GrapfelApp.swift in Sources */,
+				F94925494A845F74316BE21A /* OptionsPanel.swift in Sources */,
+				1EA3435E6DB7B94ED437B0A6 /* PromptInputView.swift in Sources */,
+				D3121FD34ECF5DB9E0C46D77 /* ResponseView.swift in Sources */,
+				E9F149D694C371AB32285A57 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		021DF6B94F6F8118AE695F28 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 64BA245C7BBA87212BF4BCE1 /* grapfel */;
+			targetProxy = CB00FC8FAA5690D2F54533AE /* PBXContainerItemProxy */;
+		};
+		37FEE5803BF21814EE18A63D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 64BA245C7BBA87212BF4BCE1 /* grapfel */;
+			targetProxy = 1BB28C15EAAC22B57CE4FDC2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0A39A9C7839EEEF1091C1DA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = grapfel/Resources/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brilliantmindworks.grapfel;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		0B3052FAD010948895F9F385 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = grapfel;
+			};
+			name = Debug;
+		};
+		146772F9893F6DF66BDA5346 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/grapfel.app/Contents/MacOS/grapfel";
+			};
+			name = Debug;
+		};
+		60E392E9717A5E0FD007F9F4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = grapfel/grapfel.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENTITLEMENTS_FILE = grapfel/grapfel.entitlements;
+				INFOPLIST_FILE = grapfel/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brilliantmindworks.grapfel;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		936469768C58B6CF8699F441 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = grapfel/grapfel.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENTITLEMENTS_FILE = grapfel/grapfel.entitlements;
+				INFOPLIST_FILE = grapfel/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brilliantmindworks.grapfel;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		9B57E64755AEB35C71A4BB23 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = grapfel;
+			};
+			name = Release;
+		};
+		BFBD6821246F30BE59B15107 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/grapfel.app/Contents/MacOS/grapfel";
+			};
+			name = Release;
+		};
+		C6504B23A37CC8B6B7EE846A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = grapfel/Resources/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brilliantmindworks.grapfel;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0F37FDD6AE4E2A2ECD3EE03D /* Build configuration list for PBXProject "grapfel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A39A9C7839EEEF1091C1DA0 /* Debug */,
+				C6504B23A37CC8B6B7EE846A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2A6046D21D6B709D0C13BE80 /* Build configuration list for PBXNativeTarget "grapfel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				60E392E9717A5E0FD007F9F4 /* Debug */,
+				936469768C58B6CF8699F441 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6814C7792DE29EEA656D47F4 /* Build configuration list for PBXNativeTarget "grapfelUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0B3052FAD010948895F9F385 /* Debug */,
+				9B57E64755AEB35C71A4BB23 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C7A25913F9FF08AC1D7C2FF7 /* Build configuration list for PBXNativeTarget "grapfelTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				146772F9893F6DF66BDA5346 /* Debug */,
+				BFBD6821246F30BE59B15107 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AB35F9A315F008A34EF0EED2 /* Project object */;
+}

@@ -1,0 +1,82 @@
+name: grapfel
+options:
+  bundleIdPrefix: com.brilliantmindworks
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "16"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    PRODUCT_BUNDLE_IDENTIFIER: com.brilliantmindworks.grapfel
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    INFOPLIST_FILE: grapfel/Resources/Info.plist
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  grapfel:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - grapfel
+    resources:
+      - grapfel/Resources/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.brilliantmindworks.grapfel
+        INFOPLIST_FILE: grapfel/Resources/Info.plist
+        ENTITLEMENTS_FILE: grapfel/grapfel.entitlements
+        CODE_SIGN_ENTITLEMENTS: grapfel/grapfel.entitlements
+    entitlements:
+      path: grapfel/grapfel.entitlements
+    dependencies: []
+    scheme:
+      testTargets:
+        - grapfelTests
+        - grapfelUITests
+
+  grapfelTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - grapfelTests
+    dependencies:
+      - target: grapfel
+
+  grapfelUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - grapfelUITests
+    dependencies:
+      - target: grapfel
+
+schemes:
+  grapfel:
+    build:
+      targets:
+        grapfel: all
+        grapfelTests: [test]
+        grapfelUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - grapfelTests
+        - grapfelUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
