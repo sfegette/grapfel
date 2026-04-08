@@ -2,7 +2,10 @@ import Foundation
 
 /// Manages the lifecycle of `apfel --serve` as a background process.
 actor ApfelServerManager {
-    static let shared = ApfelServerManager()
+    static let shared: ApfelServerManager = {
+        let port = (UserDefaults.standard.object(forKey: "serverPort") as? Int) ?? 11434
+        return ApfelServerManager(port: port)
+    }()
 
     private var process: Process?
     private let port: Int
@@ -75,6 +78,14 @@ actor ApfelServerManager {
     // MARK: - Binary discovery
 
     func findBinary() throws -> URL {
+        // Check user-specified path override first
+        let pathOverride = UserDefaults.standard.string(forKey: "apfelBinaryPath") ?? ""
+        if !pathOverride.isEmpty {
+            let url = URL(fileURLWithPath: pathOverride)
+            if FileManager.default.fileExists(atPath: url.path) { return url }
+            // Override set but not found — fall through to auto-detect
+        }
+
         // Search order: app bundle → /usr/local/bin → /opt/homebrew/bin → `which apfel`
         let candidates = [
             Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/apfel"),

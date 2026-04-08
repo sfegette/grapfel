@@ -10,6 +10,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
+    SYMROOT: build
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     ENABLE_HARDENED_RUNTIME: YES
     MARKETING_VERSION: "0.1.0"

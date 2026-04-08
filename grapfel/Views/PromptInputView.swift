@@ -7,6 +7,7 @@ struct PromptInputView: View {
         VStack(alignment: .leading, spacing: 8) {
             TextEditor(text: $viewModel.prompt)
                 .font(.body)
+                .padding(14)
                 .frame(minHeight: 80, maxHeight: 160)
                 .scrollContentBackground(.hidden)
                 .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
@@ -15,7 +16,7 @@ struct PromptInputView: View {
                         if viewModel.prompt.isEmpty {
                             Text("prompt...")
                                 .foregroundStyle(.tertiary)
-                                .padding(8)
+                                .padding(18)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                                 .allowsHitTesting(false)
                         }
