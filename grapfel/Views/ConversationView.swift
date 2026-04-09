@@ -13,11 +13,21 @@ struct ConversationView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
                     if history.isEmpty && !isLoading {
-                        Text("start a conversation")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.top, 28)
+                        VStack(spacing: 10) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 28))
+                                .foregroundStyle(.tertiary)
+                            Text("How can I help you today?")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                            Text("Runs entirely on-device — private by default.")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 80)
+                        .padding(.horizontal, 24)
                     }
 
                     ForEach(history) { message in
@@ -49,6 +59,12 @@ struct ConversationView: View {
             }
             .onChange(of: streamingContent) {
                 proxy.scrollTo("bottom")
+            }
+            .onAppear {
+                // Defer one run-loop cycle so LazyVStack items are laid out before scrollTo
+                DispatchQueue.main.async {
+                    proxy.scrollTo("bottom")
+                }
             }
         }
         .background(.ultraThinMaterial, in: Rectangle())

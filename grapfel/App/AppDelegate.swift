@@ -87,8 +87,7 @@ private final class GrapfelPanel: NSPanel {
     // MARK: - Actions
 
     @objc private func handleStatusItemClick(_ sender: NSStatusBarButton?) {
-        guard let event = NSApp.currentEvent else { return }
-        if event.type == .rightMouseUp {
+        if NSApp.currentEvent?.type == .rightMouseUp {
             showContextMenu()
         } else {
             togglePopover(sender)
@@ -116,16 +115,19 @@ private final class GrapfelPanel: NSPanel {
     }
 
     private func showPanel() {
-        guard let button = statusItem.button,
-              let buttonWindow = button.window else { return }
-
-        let buttonRect = button.convert(button.bounds, to: nil)
-        let screenRect = buttonWindow.convertToScreen(buttonRect)
-
-        // Center the panel horizontally under the status item, flush below the menu bar
-        let x = screenRect.midX - 210
-        let y = screenRect.minY - 580
-        panel.setFrameOrigin(NSPoint(x: x, y: y))
+        let origin: NSPoint
+        if let button = statusItem.button, let buttonWindow = button.window {
+            // Normal path: position flush below the status item
+            let buttonRect = button.convert(button.bounds, to: nil)
+            let screenRect = buttonWindow.convertToScreen(buttonRect)
+            origin = NSPoint(x: screenRect.midX - 210, y: screenRect.minY - 580)
+        } else if let screen = NSScreen.main {
+            // Fallback for first-launch timing: top-right of main screen (menu bar area)
+            origin = NSPoint(x: screen.frame.maxX - 440, y: screen.frame.maxY - 606)
+        } else {
+            return
+        }
+        panel.setFrameOrigin(origin)
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
 
