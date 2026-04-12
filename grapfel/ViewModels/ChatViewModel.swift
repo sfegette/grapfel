@@ -79,14 +79,14 @@ class ChatViewModel {
 
     // MARK: - Persistence
 
-    private var historyFileURL: URL? {
+    private lazy var historyFileURL: URL? = {
         guard let support = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask).first
         else { return nil }
         let dir = support.appendingPathComponent("grapfel", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("conversation.json")
-    }
+    }()
 
     private func saveHistory() {
         guard let url = historyFileURL,
