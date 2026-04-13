@@ -14,13 +14,25 @@ class ChatViewModel {
     var attachedFiles: [URL] = []
 
     private let apiClient = ApfelAPIClient()
+    private let historyFileURL: URL?
+
+    var trimmedPrompt: String { prompt.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     init() {
         let ud = UserDefaults.standard
         var opts = ApfelOptions.defaults
-        if let t = ud.object(forKey: "defaultTemperature") as? Double { opts.temperature = t }
-        if let m = ud.object(forKey: "defaultMaxTokens") as? Int      { opts.maxTokens = m }
+        if let t = ud.object(forKey: UserDefaultsKey.defaultTemperature) as? Double { opts.temperature = t }
+        if let m = ud.object(forKey: UserDefaultsKey.defaultMaxTokens) as? Int      { opts.maxTokens = m }
         options = opts
+
+        if let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            let dir = support.appendingPathComponent("grapfel", isDirectory: true)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            historyFileURL = dir.appendingPathComponent("conversation.json")
+        } else {
+            historyFileURL = nil
+        }
+
         loadHistory()
     }
 
@@ -78,15 +90,6 @@ class ChatViewModel {
     }
 
     // MARK: - Persistence
-
-    private var historyFileURL: URL? {
-        guard let support = FileManager.default
-            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        else { return nil }
-        let dir = support.appendingPathComponent("grapfel", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir.appendingPathComponent("conversation.json")
-    }
 
     private func saveHistory() {
         guard let url = historyFileURL,

@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("serverPort") private var serverPort = 11434
-    @AppStorage("defaultTemperature") private var defaultTemperature = 1.0
-    @AppStorage("defaultMaxTokens") private var defaultMaxTokens = 2048
-    @AppStorage("apfelBinaryPath") private var apfelBinaryPath = ""
+    @AppStorage(UserDefaultsKey.serverPort) private var serverPort = 11434
+    @AppStorage(UserDefaultsKey.defaultTemperature) private var defaultTemperature = 1.0
+    @AppStorage(UserDefaultsKey.defaultMaxTokens) private var defaultMaxTokens = 2048
+    @AppStorage(UserDefaultsKey.apfelBinaryPath) private var apfelBinaryPath = ""
 
     var body: some View {
         TabView {

@@ -1,5 +1,12 @@
 import Foundation
 
+enum UserDefaultsKey {
+    static let serverPort = "serverPort"
+    static let defaultTemperature = "defaultTemperature"
+    static let defaultMaxTokens = "defaultMaxTokens"
+    static let apfelBinaryPath = "apfelBinaryPath"
+}
+
 /// All generation options exposed to the user, mapped to apfel CLI flags / API fields.
 struct ApfelOptions: Equatable {
     var temperature: Double = 1.0       // --temperature

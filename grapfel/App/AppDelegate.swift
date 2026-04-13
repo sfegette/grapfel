@@ -60,7 +60,7 @@ private final class GrapfelPanel: NSPanel {
         panel.contentView = hv
     }
 
-    // MARK: - Global hot key (⌘⇧Space — configurable in Phase 7 Settings)
+    // MARK: - Global hot key (⌘⇧Space)
     // Uses Carbon RegisterEventHotKey — no Input Monitoring permission required.
 
     private func setupGlobalHotKey() {
@@ -131,7 +131,7 @@ private final class GrapfelPanel: NSPanel {
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
 
-        // Dismiss when the panel loses key focus (user clicked elsewhere)
+        NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: panel)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(panelDidResignKey),

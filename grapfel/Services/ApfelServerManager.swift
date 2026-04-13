@@ -3,7 +3,7 @@ import Foundation
 /// Manages the lifecycle of `apfel --serve` as a background process.
 actor ApfelServerManager {
     static let shared: ApfelServerManager = {
-        let port = (UserDefaults.standard.object(forKey: "serverPort") as? Int) ?? 11434
+        let port = (UserDefaults.standard.object(forKey: UserDefaultsKey.serverPort) as? Int) ?? 11434
         return ApfelServerManager(port: port)
     }()
 
@@ -79,7 +79,7 @@ actor ApfelServerManager {
 
     func findBinary() throws -> URL {
         // Check user-specified path override first
-        let pathOverride = UserDefaults.standard.string(forKey: "apfelBinaryPath") ?? ""
+        let pathOverride = UserDefaults.standard.string(forKey: UserDefaultsKey.apfelBinaryPath) ?? ""
         if !pathOverride.isEmpty {
             let url = URL(fileURLWithPath: pathOverride)
             if FileManager.default.fileExists(atPath: url.path) { return url }

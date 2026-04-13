@@ -1,7 +1,6 @@
 import Foundation
 
 /// HTTP client for apfel's OpenAI-compatible API at localhost:11434/v1.
-/// Phase 3 implementation.
 struct ApfelAPIClient {
     private let baseURL: URL
     private let session: URLSession

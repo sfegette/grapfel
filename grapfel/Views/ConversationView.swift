@@ -121,6 +121,8 @@ private struct CopyButton: View {
     let content: String
     @State private var copied = false
 
+    private static let headerRegex = try? NSRegularExpression(pattern: #"^#{1,6}\s+"#, options: .anchorsMatchLines)
+
     var body: some View {
         HStack {
             Spacer()
@@ -170,8 +172,7 @@ private struct CopyButton: View {
         // Remove fenced code blocks (keep content, drop fences + language tag)
         out = out.replacingOccurrences(of: #"```[^\n]*\n"#, with: "", options: .regularExpression)
         out = out.replacingOccurrences(of: "```", with: "")
-        // Remove ATX headers — anchorsMatchLines requires NSRegularExpression directly
-        if let re = try? NSRegularExpression(pattern: #"^#{1,6}\s+"#, options: .anchorsMatchLines) {
+        if let re = Self.headerRegex {
             out = re.stringByReplacingMatches(in: out, range: NSRange(out.startIndex..., in: out), withTemplate: "")
         }
         // Remove bold / italic (**, *, __, _)
