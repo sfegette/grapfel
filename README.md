@@ -49,6 +49,8 @@ Download the latest release from the [Releases page](https://github.com/sfegette
 
 4. Launch. The **✦** icon appears in your menubar.
 
+> **Known issue — first launch:** The menubar icon (✦) does not open the panel on first use. Press **⌘⇧Space** to open it the first time; the icon click works normally after that. ([#1](https://github.com/sfegette/grapfel/issues/1))
+
 > **Why unsigned?** Notarization requires an Apple Developer Program membership. Since grapfel targets macOS 26 beta users who are all developers, the Gatekeeper bypass above is the standard workflow.
 
 ---

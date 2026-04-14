@@ -14,8 +14,8 @@ Baseline: Phase 9 complete + simplify pass (UserDefaults key enum, historyFileUR
 
 ### Bugs
 
-- [x] **#1 — First launch only opens from hotkey**  
-  Clicking the menubar icon (✦) before the window has ever appeared does nothing. Hotkey (⌘⇧Space) is required to open it the first time. Menubar icon click should always show the panel.
+- [ ] **#1 — First launch only opens from hotkey** *(re-opened — confirmed in v0.1.0)*  
+  Clicking the menubar icon (✦) before the window has ever appeared does nothing. Hotkey (⌘⇧Space) is required to open it the first time. Menubar icon click should always show the panel. Compounded by #8 (hotkey not configurable) — users have no workaround until both are fixed.
 
 - [x] **#2 — Chat opens at top, not bottom**  
   On panel open, `ConversationView` scrolls to the first message instead of the last. Should always scroll to the most recent message (bottom).
