@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 /// Central state for the panel: prompt, conversation history, options, file attachments.
 /// @MainActor because all properties are read/written by SwiftUI on the main thread.
@@ -39,23 +40,26 @@ class ChatViewModel {
     // MARK: - Send
 
     func send() async {
-        let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = trimmedPrompt
         guard !trimmed.isEmpty else { return }
+
+        let filesToAttach = attachedFiles
 
         isLoading = true
         streamingContent = ""
         prompt = ""
 
-        // Append user turn first so it appears immediately in the UI
+        // history stores the clean prompt — no file dumps shown in the UI
         history.append(ChatMessage(role: .user, content: trimmed))
 
-        // Build message list: optional system prompt + full history (including new user turn)
         var messages: [ChatMessage] = []
         let sys = options.systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
         if !sys.isEmpty {
             messages.append(ChatMessage(role: .system, content: sys))
         }
-        messages.append(contentsOf: history)
+        // Prior turns from history (clean), then current turn with file content injected
+        messages.append(contentsOf: history.dropLast())
+        messages.append(ChatMessage(role: .user, content: buildUserContent(prompt: trimmed, files: filesToAttach)))
 
         do {
             let assistantContent: String
@@ -86,6 +90,7 @@ class ChatViewModel {
         history = []
         streamingContent = ""
         prompt = ""
+        attachedFiles = []
         deleteHistoryFile()
     }
 
@@ -118,8 +123,39 @@ class ChatViewModel {
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
+        panel.allowedContentTypes = [.text, .plainText, .rtf, .sourceCode, .json, .xml]
+        panel.message = "Select text files to include with your message"
         if panel.runModal() == .OK {
-            attachedFiles = panel.urls
+            let newURLs = panel.urls.filter { !attachedFiles.contains($0) }
+            attachedFiles.append(contentsOf: newURLs)
         }
+    }
+
+    func removeAttachedFile(_ url: URL) {
+        attachedFiles.removeAll { $0 == url }
+    }
+
+    // MARK: - File reading
+
+    private func buildUserContent(prompt: String, files: [URL]) -> String {
+        guard !files.isEmpty else { return prompt }
+        let blocks = files.compactMap { url -> String? in
+            guard let text = readTextFile(url) else { return nil }
+            return "<file name=\"\(url.lastPathComponent)\">\n\(text)\n</file>"
+        }
+        guard !blocks.isEmpty else { return prompt }
+        return blocks.joined(separator: "\n\n") + "\n\n" + prompt
+    }
+
+    private func readTextFile(_ url: URL) -> String? {
+        if let text = try? String(contentsOf: url, encoding: .utf8) { return text }
+        if url.pathExtension.lowercased() == "rtf",
+           let attrStr = try? NSAttributedString(
+               url: url,
+               options: [.documentType: NSAttributedString.DocumentType.rtf],
+               documentAttributes: nil) {
+            return attrStr.string
+        }
+        return try? String(contentsOf: url, encoding: .isoLatin1)
     }
 }

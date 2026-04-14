@@ -1,7 +1,7 @@
 # Grapfel Worklist
 
-Last updated: 2026-04-09  
-Baseline: Phase 9 complete (Liquid Glass panel, multi-turn history, persistence, Markdown, copy)
+Last updated: 2026-04-13  
+Baseline: Phase 9 complete + simplify pass (UserDefaults key enum, historyFileURL stored let, trimmedPrompt, regex caching, observer guard)
 
 ---
 
@@ -15,14 +15,11 @@ Baseline: Phase 9 complete (Liquid Glass panel, multi-turn history, persistence,
 - [x] **#2 — Chat opens at top, not bottom**  
   On panel open, `ConversationView` scrolls to the first message instead of the last. Should always scroll to the most recent message (bottom).
 
-- [ ] **#4 — Attached files not read by LLM**  
-  File attachment UI exists but neither image nor text files are sent to apfel. Need to read file contents and include in the API request. Clarify format support: PNG/JPG for images; TXT/RTF/MD for text. Match to whatever apfel v0.9.0 accepts.
+- [x] **#4 — Attached files not read by LLM**  
+  Text files injected into API payload as `<file name="...">` blocks (UTF-8, RTF, latin-1 fallback). Images not supported by apple-foundationmodel — picker restricted to text/source/JSON/XML/RTF only. File content injected only for current turn (not persisted in history). Entitlements fixed (`network.client` + `files.user-selected.read-only`).
 
-- [ ] **#5 — Attached files don't clear**  
-  File list persists across "New conversation" and there is no per-session way to remove files.  
-  - Purge file list on new conversation  
-  - Add per-file remove control (Option-click icon or ✕ badge on attachment chip)  
-  - Make discoverability obvious in UI
+- [x] **#5 — Attached files don't clear**  
+  Files cleared on `clearHistory()` and on send. Picker now appends (not replaces) selections. Per-file ✕ chip in PromptInputView via `removeAttachedFile(_:)`.
 
 ### Enhancements
 
@@ -33,14 +30,17 @@ Baseline: Phase 9 complete (Liquid Glass panel, multi-turn history, persistence,
 
 ## Backlog — Pre-existing (not yet filed as issues)
 
-- [ ] **Phase 7 proper — Configurable hotkey UI**  
-  Preferences UI to change the global hotkey away from ⌘⇧Space. Currently hardcoded in AppDelegate via Carbon `RegisterEventHotKey`.
-
-- [ ] **Error UI — binary not found / server start failed**  
+- [ ] **#7 — Error UI — binary not found / server start failed**  
   No user-visible feedback when `apfel` binary is missing or the server fails to start. Need an in-panel error state.
 
-- [ ] **App icon — final**  
+- [ ] **#8 — Configurable hotkey UI**  
+  Preferences UI to change the global hotkey away from ⌘⇧Space. Currently hardcoded in AppDelegate via Carbon `RegisterEventHotKey`.
+
+- [ ] **#9 — App icon — final**  
   Interim generated icon in place. Spec at `Scripts/icon_spec.md`. Replace by dropping a 1024px master PNG and re-running `Scripts/generate_icon.swift`.
+
+- [ ] **#10 — Test suite**  
+  No automated tests exist. Priority targets: ChatViewModel, ApfelAPIClient, ApfelServerManager, MarkdownContent parser.
 
 ---
 

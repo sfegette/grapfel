@@ -32,7 +32,7 @@ struct PromptInputView: View {
                     return .handled
                 }
 
-            HStack {
+            HStack(alignment: .center) {
                 Button(action: viewModel.pickFiles) {
                     Label("attach", systemImage: "paperclip")
                         .font(.footnote)
@@ -41,9 +41,15 @@ struct PromptInputView: View {
                 .foregroundStyle(.secondary)
 
                 if !viewModel.attachedFiles.isEmpty {
-                    Text("\(viewModel.attachedFiles.count) file(s)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(viewModel.attachedFiles, id: \.self) { url in
+                                AttachmentChip(filename: url.lastPathComponent) {
+                                    viewModel.removeAttachedFile(url)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Spacer()
@@ -57,5 +63,31 @@ struct PromptInputView: View {
             }
         }
         .padding(16)
+    }
+}
+
+private struct AttachmentChip: View {
+    let filename: String
+    let onRemove: () -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "doc.text")
+                .font(.caption2)
+            Text(filename)
+                .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: 120)
+            Button(action: onRemove) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.caption2)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(.quaternary, in: Capsule())
+        .foregroundStyle(.secondary)
     }
 }

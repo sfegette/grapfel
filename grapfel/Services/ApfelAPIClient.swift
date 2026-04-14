@@ -14,7 +14,13 @@ struct ApfelAPIClient {
 
     func complete(messages: [ChatMessage], options: ApfelOptions) async throws -> String {
         let request = try buildRequest(messages: messages, options: options, stream: false)
-        let (data, _) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: request)
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            if let apiError = try? JSONDecoder().decode(ApfelErrorResponse.self, from: data) {
+                throw ApfelError.requestFailed(apiError.error.message)
+            }
+            throw ApfelError.requestFailed("HTTP \(http.statusCode)")
+        }
         let completion = try JSONDecoder().decode(ChatCompletion.self, from: data)
         return completion.choices.first?.message.content ?? ""
     }
@@ -27,7 +33,15 @@ struct ApfelAPIClient {
             Task {
                 do {
                     let request = try buildRequest(messages: messages, options: options, stream: true)
-                    let (bytes, _) = try await session.bytes(for: request)
+                    let (bytes, response) = try await session.bytes(for: request)
+                    if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                        var body = Data()
+                        for try await byte in bytes { body.append(byte) }
+                        if let apiError = try? JSONDecoder().decode(ApfelErrorResponse.self, from: body) {
+                            throw ApfelError.requestFailed(apiError.error.message)
+                        }
+                        throw ApfelError.requestFailed("HTTP \(http.statusCode)")
+                    }
 
                     for try await line in bytes.lines {
                         guard line.hasPrefix("data: ") else { continue }
@@ -72,6 +86,11 @@ struct ApfelAPIClient {
 }
 
 // MARK: - Response models
+
+private struct ApfelErrorResponse: Decodable {
+    struct APIError: Decodable { let message: String }
+    let error: APIError
+}
 
 private struct ChatCompletion: Decodable {
     struct Choice: Decodable {
