@@ -29,11 +29,8 @@ echo "==> Tagging v${VERSION}..."
 git tag -a "v${VERSION}" -m "Release v${VERSION}"
 git push origin "v${VERSION}"
 
-echo "==> Creating GitHub Release v${VERSION}..."
-gh release create "v${VERSION}" \
-  "${DIST_DIR}/${ZIP_NAME}" \
-  --title "grapfel v${VERSION}" \
-  --notes "$(cat <<'RELEASE_NOTES'
+NOTES_FILE="${DIST_DIR}/release-notes.md"
+cat > "${NOTES_FILE}" << 'RELEASE_NOTES'
 ## grapfel v0.1.0
 
 First public release. Requires **macOS 26 Tahoe (beta)** and **Apple Silicon** with Apple Intelligence enabled.
@@ -71,7 +68,12 @@ First public release. Requires **macOS 26 Tahoe (beta)** and **Apple Silicon** w
 - Global hotkey ⌘⇧Space is not yet configurable
 - Context window is 4096 tokens — large file attachments may be truncated in a future release
 RELEASE_NOTES
-)"
+
+echo "==> Creating GitHub Release v${VERSION}..."
+gh release create "v${VERSION}" \
+  "${DIST_DIR}/${ZIP_NAME}" \
+  --title "grapfel v${VERSION}" \
+  --notes-file "${NOTES_FILE}"
 
 echo ""
 echo "Released: https://github.com/sfegette/grapfel/releases/tag/v${VERSION}"
