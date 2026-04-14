@@ -3,6 +3,11 @@
 Last updated: 2026-04-13  
 Baseline: Phase 9 complete + simplify pass (UserDefaults key enum, historyFileURL stored let, trimmedPrompt, regex caching, observer guard)
 
+## Released
+
+- [x] **v0.1.0 — Initial public release** (2026-04-13)  
+  Unsigned/ad-hoc zip for macOS 26 Tahoe beta users. Published to GitHub Releases as `grapfel-0.1.0-macos26.zip`. Gatekeeper bypass required (`xattr -dr com.apple.quarantine`).
+
 ---
 
 ## Active — GitHub Issues (post-Phase 9)

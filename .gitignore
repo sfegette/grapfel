@@ -25,3 +25,6 @@ build/
 # Environment
 .env
 *.env.local
+
+# Release artifacts (created by Scripts/release.sh, never committed)
+dist/

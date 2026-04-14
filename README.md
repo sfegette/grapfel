@@ -29,6 +29,30 @@ grapfel sits in your menubar. Click the icon (or press **⌘⇧Space** from anyw
 
 ---
 
+## download
+
+> **This is an unsigned build.** You must bypass Gatekeeper to run it — see instructions below.
+
+Download the latest release from the [Releases page](https://github.com/sfegette/grapfel/releases).
+
+### install from zip
+
+1. Download **grapfel-0.1.0-macos26.zip** from the Assets section of the release.
+2. Unzip and move `grapfel.app` to `/Applications`.
+3. **Bypass Gatekeeper** — pick either method:
+
+   **Option A — Terminal (recommended):**
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/grapfel.app
+   ```
+   **Option B — Finder:** Right-click `grapfel.app` → **Open** → click **Open** in the dialog.
+
+4. Launch. The **✦** icon appears in your menubar.
+
+> **Why unsigned?** Notarization requires an Apple Developer Program membership. Since grapfel targets macOS 26 beta users who are all developers, the Gatekeeper bypass above is the standard workflow.
+
+---
+
 ## install apfel
 
 grapfel requires `apfel` to be installed and available on your PATH.
@@ -48,7 +72,7 @@ apfel "say hello"
 
 ## install grapfel
 
-grapfel is currently distributed as source only — build it yourself in Xcode.
+grapfel can be installed from a pre-built zip (see [download](#download) above) or built from source.
 
 ### build from source
 
@@ -180,7 +204,8 @@ ConversationView
 - [x] Markdown rendering (code blocks, bold, italic, inline code)
 - [x] Copy response (raw, code block, plain text)
 - [x] App icon (interim generated; final hand-crafted artwork pending)
-- [x] Build output to `build/Debug/grapfel.app`
+- [x] Build output to `build/Release/grapfel.app` (Release config)
+- [x] Release zip published to GitHub Releases (v0.1.0)
 - [ ] Configurable hotkey in Settings
 - [ ] Error UI for binary-not-found / server-start-failed
 - [ ] SSE streaming (blocked on apfel upstream fix)
