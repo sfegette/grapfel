@@ -1,7 +1,7 @@
 # Grapfel Worklist
 
-Last updated: 2026-04-13  
-Baseline: Phase 9 complete + simplify pass (UserDefaults key enum, historyFileURL stored let, trimmedPrompt, regex caching, observer guard)
+Last updated: 2026-04-14  
+Baseline: v0.1.0 released — all Phase 9 issues resolved
 
 ## Released
 
@@ -10,30 +10,14 @@ Baseline: Phase 9 complete + simplify pass (UserDefaults key enum, historyFileUR
 
 ---
 
-## Active — GitHub Issues (post-Phase 9)
+## Active — Open GitHub Issues
 
 ### Bugs
 
 - [ ] **#1 — First launch only opens from hotkey** *(re-opened — confirmed in v0.1.0)*  
   Clicking the menubar icon (✦) before the window has ever appeared does nothing. Hotkey (⌘⇧Space) is required to open it the first time. Menubar icon click should always show the panel. Compounded by #8 (hotkey not configurable) — users have no workaround until both are fixed.
 
-- [x] **#2 — Chat opens at top, not bottom**  
-  On panel open, `ConversationView` scrolls to the first message instead of the last. Should always scroll to the most recent message (bottom).
-
-- [x] **#4 — Attached files not read by LLM**  
-  Text files injected into API payload as `<file name="...">` blocks (UTF-8, RTF, latin-1 fallback). Images not supported by apple-foundationmodel — picker restricted to text/source/JSON/XML/RTF only. File content injected only for current turn (not persisted in history). Entitlements fixed (`network.client` + `files.user-selected.read-only`).
-
-- [x] **#5 — Attached files don't clear**  
-  Files cleared on `clearHistory()` and on send. Picker now appends (not replaces) selections. Per-file ✕ chip in PromptInputView via `removeAttachedFile(_:)`.
-
 ### Enhancements
-
-- [x] **#3 — Welcome/empty-state message**  
-  Blank chat panel looks bare. Show a styled placeholder ("How can I help you today?" or similar) when conversation history is empty. Hide once first message is sent.
-
----
-
-## Backlog — Pre-existing (not yet filed as issues)
 
 - [ ] **#7 — Error UI — binary not found / server start failed**  
   No user-visible feedback when `apfel` binary is missing or the server fails to start. Need an in-panel error state.
@@ -41,11 +25,30 @@ Baseline: Phase 9 complete + simplify pass (UserDefaults key enum, historyFileUR
 - [ ] **#8 — Configurable hotkey UI**  
   Preferences UI to change the global hotkey away from ⌘⇧Space. Currently hardcoded in AppDelegate via Carbon `RegisterEventHotKey`.
 
+- [ ] **#11 — Warn user when attached file(s) may exceed context window**  
+  No feedback when file content is likely to overflow the 4096-token context window. Show a warning before sending.
+
+- [ ] **#12 — Truncate oversized file attachments with a [truncated] note**  
+  When file content exceeds the context budget, truncate it server-side and append a `[truncated]` marker so the model isn't silently fed a partial file.
+
+### Design
+
 - [ ] **#9 — App icon — final**  
   Interim generated icon in place. Spec at `Scripts/icon_spec.md`. Replace by dropping a 1024px master PNG and re-running `Scripts/generate_icon.swift`.
 
+### Testing
+
 - [ ] **#10 — Test suite**  
   No automated tests exist. Priority targets: ChatViewModel, ApfelAPIClient, ApfelServerManager, MarkdownContent parser.
+
+---
+
+## Closed — Post-Phase 9
+
+- [x] **#2 — Chat opens at top, not bottom**
+- [x] **#3 — Welcome/empty-state message**
+- [x] **#4 — Attached files not read by LLM**
+- [x] **#5 — Attached files don't clear**
 
 ---
 
