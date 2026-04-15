@@ -17,7 +17,20 @@ class ChatViewModel {
     private let apiClient = ApfelAPIClient()
     private let historyFileURL: URL?
 
+    /// Character budget for all attached file content combined (~2 000 tokens).
+    static let fileContentCharBudget = 8_000
+
     var trimmedPrompt: String { prompt.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    /// True when the total size of attached files is likely to exceed the context budget.
+    /// Uses filesystem metadata (no content read) so it's cheap to call reactively.
+    var attachedFilesExceedBudget: Bool {
+        let totalBytes = attachedFiles.reduce(0) { sum, url in
+            let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+            return sum + size
+        }
+        return totalBytes > Self.fileContentCharBudget
+    }
 
     init() {
         let ud = UserDefaults.standard
@@ -139,8 +152,18 @@ class ChatViewModel {
 
     private func buildUserContent(prompt: String, files: [URL]) -> String {
         guard !files.isEmpty else { return prompt }
+        var remainingBudget = Self.fileContentCharBudget
         let blocks = files.compactMap { url -> String? in
-            guard let text = readTextFile(url) else { return nil }
+            guard let rawText = readTextFile(url) else { return nil }
+            let text: String
+            if rawText.count > remainingBudget {
+                let cutoff = rawText.index(rawText.startIndex, offsetBy: max(remainingBudget, 0))
+                text = String(rawText[..<cutoff]) + "\n[truncated]"
+                remainingBudget = 0
+            } else {
+                text = rawText
+                remainingBudget -= rawText.count
+            }
             return "<file name=\"\(url.lastPathComponent)\">\n\(text)\n</file>"
         }
         guard !blocks.isEmpty else { return prompt }

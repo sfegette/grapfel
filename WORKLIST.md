@@ -1,6 +1,6 @@
 # Grapfel Worklist
 
-Last updated: 2026-04-14  
+Last updated: 2026-04-15  
 Baseline: v0.1.0 released — all Phase 9 issues resolved
 
 ## Released
@@ -14,8 +14,8 @@ Baseline: v0.1.0 released — all Phase 9 issues resolved
 
 ### Bugs
 
-- [ ] **#1 — First launch only opens from hotkey** *(re-opened — confirmed in v0.1.0)*  
-  Clicking the menubar icon (✦) before the window has ever appeared does nothing. Hotkey (⌘⇧Space) is required to open it the first time. Menubar icon click should always show the panel. Compounded by #8 (hotkey not configurable) — users have no workaround until both are fixed.
+- [x] **#1 — First launch only opens from hotkey** *(fixed)*  
+  Root cause: resign-key notification fired immediately after `makeKeyAndOrderFront` due to focus handoff from the status bar click, causing `panelDidResignKey` → `hidePanel()` before the panel was visible. Fix: 300ms timestamp guard in `panelDidResignKey` ignores spurious dismiss events within the click activation window.
 
 ### Enhancements
 
@@ -25,11 +25,11 @@ Baseline: v0.1.0 released — all Phase 9 issues resolved
 - [ ] **#8 — Configurable hotkey UI**  
   Preferences UI to change the global hotkey away from ⌘⇧Space. Currently hardcoded in AppDelegate via Carbon `RegisterEventHotKey`.
 
-- [ ] **#11 — Warn user when attached file(s) may exceed context window**  
-  No feedback when file content is likely to overflow the 4096-token context window. Show a warning before sending.
+- [x] **#11 — Warn user when attached file(s) may exceed context window** *(fixed)*  
+  `attachedFilesExceedBudget` computed property on `ChatViewModel` uses `URLResourceValues` (file size, no content read) to cheaply estimate whether attached files exceed the 8 000-char budget. `PromptInputView` shows an orange warning label below the attachment chips when true.
 
-- [ ] **#12 — Truncate oversized file attachments with a [truncated] note**  
-  When file content exceeds the context budget, truncate it server-side and append a `[truncated]` marker so the model isn't silently fed a partial file.
+- [x] **#12 — Truncate oversized file attachments with a [truncated] note** *(fixed)*  
+  `buildUserContent` now enforces a shared 8 000-char budget across all attached files. Each file is read in order; once the budget is consumed the remainder is replaced with `[truncated]`.
 
 ### Design
 
@@ -43,8 +43,11 @@ Baseline: v0.1.0 released — all Phase 9 issues resolved
 
 ---
 
-## Closed — Post-Phase 9
+## Closed — Post-v0.1.0
 
+- [x] **#1 — First launch only opens from hotkey** — 300ms resign-key guard in AppDelegate
+- [x] **#11 — Warn when attached file(s) exceed context budget** — orange label in PromptInputView
+- [x] **#12 — Truncate oversized attachments with [truncated] marker** — budget enforced in buildUserContent
 - [x] **#2 — Chat opens at top, not bottom**
 - [x] **#3 — Welcome/empty-state message**
 - [x] **#4 — Attached files not read by LLM**

@@ -13,6 +13,7 @@ private final class GrapfelPanel: NSPanel {
     private var panel: GrapfelPanel!
     private var hotKeyRef: EventHotKeyRef?
     private var carbonEventHandler: EventHandlerRef?
+    private var panelLastShownAt: Date = .distantPast
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
@@ -115,6 +116,7 @@ private final class GrapfelPanel: NSPanel {
     }
 
     private func showPanel() {
+        panelLastShownAt = Date()
         let origin: NSPoint
         if let button = statusItem.button, let buttonWindow = button.window {
             // Normal path: position flush below the status item
@@ -150,6 +152,9 @@ private final class GrapfelPanel: NSPanel {
     }
 
     @objc private func panelDidResignKey() {
+        // Ignore spurious resign-key events that fire immediately after showing
+        // (caused by focus handoff from the status bar button click on first launch).
+        guard Date().timeIntervalSince(panelLastShownAt) > 0.3 else { return }
         hidePanel()
     }
 }

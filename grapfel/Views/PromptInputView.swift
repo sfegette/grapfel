@@ -53,6 +53,20 @@ struct PromptInputView: View {
                 }
 
                 Spacer()
+            }
+
+            if viewModel.attachedFilesExceedBudget {
+                Label(
+                    "File(s) exceed context budget — content will be truncated before sending.",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack(alignment: .center) {
+                Spacer()
 
                 Button(action: { Task { await viewModel.send() } }) {
                     Label("send", systemImage: "arrow.up.circle.fill")
