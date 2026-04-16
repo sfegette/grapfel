@@ -13,7 +13,16 @@ private final class GrapfelPanel: NSPanel {
     private var panel: GrapfelPanel!
     private var hotKeyRef: EventHotKeyRef?
     private var carbonEventHandler: EventHandlerRef?
-    private var panelLastShownAt: Date = .distantPast
+    // Global mouse-down monitor used to dismiss the panel when the user clicks outside it.
+    // Replaces the old NSWindow.didResignKeyNotification approach, which had a first-launch
+    // timing race: on the very first activation of a LSUIElement background process, the
+    // focus-handoff events arrive well after the 300 ms guard expired, so the panel would
+    // immediately hide. A global event monitor fires before AppKit delivers the event, so
+    // there is no timing dependency at all.
+    private var outsideClickMonitor: Any?
+    // Set when the panel is dismissed by an outside click so togglePopover can detect that
+    // the click also landed on the status-bar button and avoid immediately re-opening.
+    private var hiddenByOutsideClickAt: Date = .distantPast
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
@@ -111,50 +120,57 @@ private final class GrapfelPanel: NSPanel {
         if panel.isVisible {
             hidePanel()
         } else {
+            guard Date().timeIntervalSince(hiddenByOutsideClickAt) > 0.15 else { return }
             showPanel()
         }
     }
 
     private func showPanel() {
-        panelLastShownAt = Date()
+        removeOutsideClickMonitor()
+
         let origin: NSPoint
         if let button = statusItem.button, let buttonWindow = button.window {
-            // Normal path: position flush below the status item
             let buttonRect = button.convert(button.bounds, to: nil)
             let screenRect = buttonWindow.convertToScreen(buttonRect)
             origin = NSPoint(x: screenRect.midX - 210, y: screenRect.minY - 580)
         } else if let screen = NSScreen.main {
-            // Fallback for first-launch timing: top-right of main screen (menu bar area)
+            // Fallback when the status-item window is not yet available.
             origin = NSPoint(x: screen.frame.maxX - 440, y: screen.frame.maxY - 606)
         } else {
             return
         }
         panel.setFrameOrigin(origin)
-        NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
+        NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)
 
-        NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: panel)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(panelDidResignKey),
-            name: NSWindow.didResignKeyNotification,
-            object: panel
-        )
+        // Dismiss when the user clicks outside the panel.  A global event monitor fires
+        // before AppKit delivers the click to the target window, so this approach has no
+        // first-launch timing race (unlike NSWindow.didResignKeyNotification).
+        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        ) { [weak self] _ in
+            guard let self else { return }
+            guard !self.panel.frame.contains(NSEvent.mouseLocation) else { return }
+            // Async dispatch so this runs after the current event is fully processed.
+            // The isVisible guard prevents a double-hide if the button handler already
+            // called hidePanel() synchronously for the same click.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.panel.isVisible else { return }
+                self.hiddenByOutsideClickAt = Date()
+                self.hidePanel()
+            }
+        }
     }
 
     private func hidePanel() {
-        NotificationCenter.default.removeObserver(
-            self,
-            name: NSWindow.didResignKeyNotification,
-            object: panel
-        )
+        removeOutsideClickMonitor()
         panel.orderOut(nil)
     }
 
-    @objc private func panelDidResignKey() {
-        // Ignore spurious resign-key events that fire immediately after showing
-        // (caused by focus handoff from the status bar button click on first launch).
-        guard Date().timeIntervalSince(panelLastShownAt) > 0.3 else { return }
-        hidePanel()
+    private func removeOutsideClickMonitor() {
+        if let monitor = outsideClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            outsideClickMonitor = nil
+        }
     }
 }

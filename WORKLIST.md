@@ -14,8 +14,8 @@ Baseline: v0.1.0 released — all Phase 9 issues resolved
 
 ### Bugs
 
-- [x] **#1 — First launch only opens from hotkey** *(fixed)*  
-  Root cause: resign-key notification fired immediately after `makeKeyAndOrderFront` due to focus handoff from the status bar click, causing `panelDidResignKey` → `hidePanel()` before the panel was visible. Fix: 300ms timestamp guard in `panelDidResignKey` ignores spurious dismiss events within the click activation window.
+- [x] **#1 — First launch only opens from hotkey** *(fixed v0.1.2)*  
+  Root cause: `applicationDidResignActive` fired ~2s after open (the previous frontmost app reclaiming focus — normal OS behaviour for LSUIElement processes), hiding the panel before the user could interact. Secondary issue: `NSWindow.didResignKeyNotification` had a first-launch timing race. Fix: replaced resign-key notification with a global `NSEvent` mouse-down monitor for outside-click dismissal; removed `applicationDidResignActive` entirely.
 
 ### Enhancements
 
@@ -45,7 +45,7 @@ Baseline: v0.1.0 released — all Phase 9 issues resolved
 
 ## Closed — Post-v0.1.0
 
-- [x] **#1 — First launch only opens from hotkey** — 300ms resign-key guard in AppDelegate
+- [x] **#1 — First launch only opens from hotkey** — global mouse-down monitor replaces resign-key notification; removed false-positive applicationDidResignActive handler
 - [x] **#11 — Warn when attached file(s) exceed context budget** — orange label in PromptInputView
 - [x] **#12 — Truncate oversized attachments with [truncated] marker** — budget enforced in buildUserContent
 - [x] **#2 — Chat opens at top, not bottom**
