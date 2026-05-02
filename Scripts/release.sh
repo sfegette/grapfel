@@ -61,16 +61,29 @@ if [ ! -d "${APP_PATH}" ]; then
   exit 1
 fi
 
-echo "==> Stripping get-task-allow and re-signing with production entitlements..."
+echo "==> Re-signing all components with Developer ID (inside-out)..."
 DIST_ENTITLEMENTS="grapfel/grapfel-dist.entitlements"
 DEV_ID="Developer ID Application: Scott Fegette (MX6K4V7DP6)"
+SPARKLE="${APP_PATH}/Contents/Frameworks/Sparkle.framework/Versions/B"
 
-# Sign inner components first (inside-out), preserving Sparkle's own signatures
-# by only touching the components we own.
+# 1. Sparkle XPC services
+for xpc in "${SPARKLE}/XPCServices/"*.xpc; do
+  codesign --force --sign "${DEV_ID}" --timestamp --options runtime "$xpc"
+done
+
+# 2. Sparkle helper apps and binaries
+codesign --force --sign "${DEV_ID}" --timestamp --options runtime "${SPARKLE}/Updater.app"
+codesign --force --sign "${DEV_ID}" --timestamp --options runtime "${SPARKLE}/Autoupdate"
+
+# 3. Sparkle framework
+codesign --force --sign "${DEV_ID}" --timestamp \
+  "${APP_PATH}/Contents/Frameworks/Sparkle.framework"
+
+# 4. Main executable (strips get-task-allow injected by Xcode 26)
 codesign --force --sign "${DEV_ID}" --timestamp --options runtime \
   "${APP_PATH}/Contents/MacOS/grapfel"
 
-# Re-sign the outer app bundle with clean entitlements (no --deep, preserves Sparkle)
+# 5. Outer app bundle with production entitlements
 codesign --force --sign "${DEV_ID}" \
   --entitlements "${DIST_ENTITLEMENTS}" \
   --timestamp --options runtime \
@@ -80,7 +93,6 @@ echo "==> Verifying code signature..."
 codesign --verify --deep --strict "${APP_PATH}"
 codesign -dv --verbose=4 "${APP_PATH}" 2>&1 | grep "Authority\|TeamIdentifier\|Timestamp"
 
-# Confirm get-task-allow is gone
 if codesign -d --entitlements - "${APP_PATH}" 2>&1 | grep -q "get-task-allow.*true\|true.*get-task-allow"; then
   echo "ERROR: get-task-allow=true still present after re-signing" >&2
   exit 1
