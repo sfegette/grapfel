@@ -131,10 +131,10 @@ ditto -c -k --keepParent "${APP_PATH}" "${DIST_DIR}/${ZIP_NAME}"
 echo "==> Signing with EdDSA (private key from Keychain)..."
 SIGN_OUTPUT=$("${SIGN_UPDATE}" "${DIST_DIR}/${ZIP_NAME}")
 
-ED_SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' \
-  | sed 's/sparkle:edSignature="//;s/"//')
-ZIP_SIZE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:length="[^"]*"' \
-  | sed 's/sparkle:length="//;s/"//')
+ED_SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'edSignature="[^"]*"' \
+  | sed 's/edSignature="//;s/"//')
+ZIP_SIZE=$(echo "$SIGN_OUTPUT" | grep -o 'length="[^"]*"' \
+  | sed 's/length="//;s/"//')
 
 if [[ -z "$ED_SIGNATURE" ]]; then
   echo "ERROR: sign_update produced no signature." >&2
