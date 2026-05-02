@@ -21,6 +21,18 @@
         <title>grapfel</title>
         <link>https://github.com/sfegette/grapfel</link>
         <description>grapfel macOS updates</description>
+        <item>
+            <title>Version 0.1.3</title>
+            <pubDate>Fri, 01 May 2026 22:07:25 -0700</pubDate>
+            <sparkle:version>0.1.3</sparkle:version>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/sfegette/grapfel/releases/download/v0.1.3/grapfel-0.1.3-macos26.zip"
+                length="3001851"
+                type="application/octet-stream"
+                sparkle:edSignature="TYhy1l8EcXe7TFgojt2xTk/m8RqghkIEokebRZ3udZJtgVb8ODqjiivjPrsgozghJ6nTdOPhv+fhrcrEyxh1Cw=="
+            />
+        </item>
         <!-- ITEMS_PLACEHOLDER -->
     </channel>
 </rss>
