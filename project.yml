@@ -19,6 +19,13 @@ settings:
     INFOPLIST_FILE: grapfel/Resources/Info.plist
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: MX6K4V7DP6
+  configs:
+    Release:
+      CODE_SIGN_STYLE: Manual
+      CODE_SIGN_IDENTITY: "Developer ID Application"
+      PROVISIONING_PROFILE_SPECIFIER: ""
+      OTHER_CODE_SIGN_FLAGS: "--timestamp"
+      CODE_SIGN_ENTITLEMENTS: grapfel/grapfel-dist.entitlements
 
 packages:
   Sparkle:
@@ -40,6 +47,10 @@ targets:
         INFOPLIST_FILE: grapfel/Resources/Info.plist
         ENTITLEMENTS_FILE: grapfel/grapfel.entitlements
         CODE_SIGN_ENTITLEMENTS: grapfel/grapfel.entitlements
+      configs:
+        Release:
+          CODE_SIGN_ENTITLEMENTS: grapfel/grapfel-dist.entitlements
+          ENTITLEMENTS_FILE: grapfel/grapfel-dist.entitlements
     entitlements:
       path: grapfel/grapfel.entitlements
       properties:

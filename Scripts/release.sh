@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# release.sh — build, sign (Sparkle EdDSA), zip, update appcast, tag, and publish grapfel
+# release.sh — build, sign, notarize, staple, zip, update appcast, tag, and publish grapfel
 # Usage: bash Scripts/release.sh  (run from repo root)
 #
 # One-time setup:
-#   1. Download the Sparkle release package from https://github.com/sparkle-project/Sparkle/releases
-#      and copy sign_update to /usr/local/bin/ (or ~/bin/).
-#   2. Run: sign_update --generate-keys    (stores private key in Keychain automatically)
-#   3. Copy the printed public key into grapfel/Resources/Info.plist → SUPublicEDKey.
-#   4. Enable GitHub Pages: repo Settings → Pages → Source: main branch, /docs folder.
+#   1. Download Sparkle release package, copy sign_update + generate_keys to /usr/local/bin/
+#   2. Run: generate_keys    (stores EdDSA private key in Keychain, paste public key → Info.plist)
+#   3. Run: xcrun notarytool store-credentials "grapfel-notarize" \
+#             --apple-id "scotrick@mac.com" --team-id "MX6K4V7DP6" --password "<app-specific-pw>"
+#   4. Enable GitHub Pages: repo Settings → Pages → main branch, /docs folder
 
 set -euo pipefail
 
@@ -19,6 +19,7 @@ DIST_DIR="dist"
 APPCAST="docs/appcast.xml"
 RELEASE_URL="https://github.com/sfegette/grapfel/releases/download/v${VERSION}/${ZIP_NAME}"
 PUB_DATE=$(date -R)
+NOTARIZE_PROFILE="grapfel-notarize"
 
 # ── Locate sign_update ───────────────────────────────────────────────────────
 
@@ -29,12 +30,10 @@ find_sign_update() {
       "${HOME}/bin/sign_update"; do
     [[ -x "$candidate" ]] && echo "$candidate" && return
   done
-  # SPM DerivedData checkouts (built as part of Xcode build)
   local found
   found=$(find "${HOME}/Library/Developer/Xcode/DerivedData" \
     -path "*/Sparkle/bin/sign_update" -type f 2>/dev/null | head -1)
   if [[ -n "$found" ]]; then echo "$found"; return; fi
-  # Swift PM local cache
   found=$(find "${HOME}/Library/Caches/org.swift.swiftpm" \
     -name "sign_update" -type f 2>/dev/null | head -1)
   [[ -n "$found" ]] && echo "$found"
@@ -43,13 +42,11 @@ find_sign_update() {
 SIGN_UPDATE=$(find_sign_update)
 if [[ -z "$SIGN_UPDATE" ]]; then
   echo "ERROR: sign_update not found." >&2
-  echo "  Download Sparkle release from https://github.com/sparkle-project/Sparkle/releases" >&2
-  echo "  and place sign_update in /usr/local/bin/ or ~/bin/" >&2
   exit 1
 fi
 echo "==> sign_update: ${SIGN_UPDATE}"
 
-# ── Build ────────────────────────────────────────────────────────────────────
+# ── Build (Release, Developer ID signed) ────────────────────────────────────
 
 echo "==> Building grapfel ${VERSION} (Release)..."
 xcodebuild build \
@@ -64,14 +61,60 @@ if [ ! -d "${APP_PATH}" ]; then
   exit 1
 fi
 
-# ── Zip ──────────────────────────────────────────────────────────────────────
+echo "==> Stripping get-task-allow and re-signing with production entitlements..."
+DIST_ENTITLEMENTS="grapfel/grapfel-dist.entitlements"
+DEV_ID="Developer ID Application: Scott Fegette (MX6K4V7DP6)"
 
-echo "==> Zipping ${APP_PATH} → ${DIST_DIR}/${ZIP_NAME}..."
+# Sign inner components first (inside-out), preserving Sparkle's own signatures
+# by only touching the components we own.
+codesign --force --sign "${DEV_ID}" --timestamp --options runtime \
+  "${APP_PATH}/Contents/MacOS/grapfel"
+
+# Re-sign the outer app bundle with clean entitlements (no --deep, preserves Sparkle)
+codesign --force --sign "${DEV_ID}" \
+  --entitlements "${DIST_ENTITLEMENTS}" \
+  --timestamp --options runtime \
+  "${APP_PATH}"
+
+echo "==> Verifying code signature..."
+codesign --verify --deep --strict "${APP_PATH}"
+codesign -dv --verbose=4 "${APP_PATH}" 2>&1 | grep "Authority\|TeamIdentifier\|Timestamp"
+
+# Confirm get-task-allow is gone
+if codesign -d --entitlements - "${APP_PATH}" 2>&1 | grep -q "get-task-allow.*true\|true.*get-task-allow"; then
+  echo "ERROR: get-task-allow=true still present after re-signing" >&2
+  exit 1
+fi
+echo "    get-task-allow: absent/false (good)"
+
+# ── Zip for notarization ─────────────────────────────────────────────────────
+
 mkdir -p "${DIST_DIR}"
+NOTARIZE_ZIP="${DIST_DIR}/grapfel-notarize-tmp.zip"
+echo "==> Zipping for notarization..."
+ditto -c -k --keepParent "${APP_PATH}" "${NOTARIZE_ZIP}"
+
+# ── Notarize ─────────────────────────────────────────────────────────────────
+
+echo "==> Submitting to Apple notarization (this takes ~1 min)..."
+xcrun notarytool submit "${NOTARIZE_ZIP}" \
+  --keychain-profile "${NOTARIZE_PROFILE}" \
+  --wait
+
+rm -f "${NOTARIZE_ZIP}"
+
+# ── Staple ───────────────────────────────────────────────────────────────────
+
+echo "==> Stapling notarization ticket to app..."
+xcrun stapler staple "${APP_PATH}"
+xcrun stapler validate "${APP_PATH}"
+
+# ── Final zip (stapled app) ──────────────────────────────────────────────────
+
+echo "==> Zipping stapled app → ${DIST_DIR}/${ZIP_NAME}..."
 ditto -c -k --keepParent "${APP_PATH}" "${DIST_DIR}/${ZIP_NAME}"
 
 # ── Sparkle EdDSA signature ──────────────────────────────────────────────────
-# sign_update outputs:  sparkle:edSignature="<sig>" sparkle:length="<bytes>"
 
 echo "==> Signing with EdDSA (private key from Keychain)..."
 SIGN_OUTPUT=$("${SIGN_UPDATE}" "${DIST_DIR}/${ZIP_NAME}")
@@ -84,7 +127,6 @@ ZIP_SIZE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:length="[^"]*"' \
 if [[ -z "$ED_SIGNATURE" ]]; then
   echo "ERROR: sign_update produced no signature." >&2
   echo "  Raw output: ${SIGN_OUTPUT}" >&2
-  echo "  Is the EdDSA private key in Keychain? Run: sign_update --generate-keys" >&2
   exit 1
 fi
 if [[ -z "$ZIP_SIZE" ]]; then
@@ -99,7 +141,7 @@ echo "    Length:    ${ZIP_SIZE} bytes"
 echo "==> Updating ${APPCAST} for v${VERSION}..."
 
 python3 - <<PYEOF
-import re, sys
+import sys
 
 appcast = "${APPCAST}"
 with open(appcast) as f:
@@ -148,8 +190,8 @@ cat > "${NOTES_FILE}" <<RELEASE_NOTES
 
 1. Download **${ZIP_NAME}** from the assets below.
 2. Unzip and move \`grapfel.app\` to \`/Applications\`.
-3. Launch. The **✦** icon appears in your menubar.
-4. Future updates delivered automatically via Sparkle — or right-click ✦ → "Check for Updates…"
+3. Launch — no Gatekeeper prompts, no quarantine step needed.
+4. The **✦** icon appears in your menubar. Future updates delivered automatically via Sparkle.
 
 ### Requirements
 
@@ -160,6 +202,7 @@ cat > "${NOTES_FILE}" <<RELEASE_NOTES
 
 ### What's new in v${VERSION}
 
+- **Signed & notarized** — opens directly from /Applications, no quarantine prompt
 - **Auto-update** — Sparkle delivers new releases in-app; right-click ✦ → "Check for Updates…"
 - **Token usage** — prompt / completion / total token count shown after each response
 - **JSON mode** — toggle in the options panel to request structured JSON output

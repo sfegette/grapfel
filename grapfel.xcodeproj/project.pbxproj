@@ -67,6 +67,7 @@
 		CA2FA6BE08F7FB056600D566 /* ServerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerState.swift; sourceTree = "<group>"; };
 		CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelTests.swift; sourceTree = "<group>"; };
 		D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsPanel.swift; sourceTree = "<group>"; };
+		DF8C05B6625DA154792A56D7 /* grapfel-dist.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "grapfel-dist.entitlements"; sourceTree = "<group>"; };
 		F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		F736F3FB827065B3C4816602 /* ApfelOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -102,6 +103,7 @@
 				0C7383123C3F8BE31AFCA753 /* Services */,
 				5639D711B7C0598690190FCE /* ViewModels */,
 				53C1D1FCFBD0490A77833E05 /* Views */,
+				DF8C05B6625DA154792A56D7 /* grapfel-dist.entitlements */,
 				38583EC51D936B29873F377E /* grapfel.entitlements */,
 			);
 			path = grapfel;
@@ -262,15 +264,12 @@
 				TargetAttributes = {
 					58166ADA6C88656D5253AAE6 = {
 						DevelopmentTeam = MX6K4V7DP6;
-						ProvisioningStyle = Automatic;
 					};
 					64BA245C7BBA87212BF4BCE1 = {
 						DevelopmentTeam = MX6K4V7DP6;
-						ProvisioningStyle = Automatic;
 					};
 					769E11985ADE9F32E09027FB = {
 						DevelopmentTeam = MX6K4V7DP6;
-						ProvisioningStyle = Automatic;
 						TestTargetID = 64BA245C7BBA87212BF4BCE1;
 					};
 				};
@@ -492,7 +491,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = grapfel/grapfel.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				ENTITLEMENTS_FILE = grapfel/grapfel.entitlements;
+				ENTITLEMENTS_FILE = "grapfel/grapfel-dist.entitlements";
 				INFOPLIST_FILE = grapfel/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -570,7 +569,9 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = "grapfel/grapfel-dist.entitlements";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -591,8 +592,10 @@
 				MARKETING_VERSION = 0.1.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = com.brilliantmindworks.grapfel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
