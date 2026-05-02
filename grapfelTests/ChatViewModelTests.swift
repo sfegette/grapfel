@@ -7,7 +7,7 @@ final class ChatViewModelTests: XCTestCase {
     func test_initialState() {
         let vm = ChatViewModel()
         XCTAssertEqual(vm.prompt, "")
-        XCTAssertEqual(vm.response, "")
+        XCTAssertTrue(vm.history.isEmpty)
         XCTAssertFalse(vm.isLoading)
         XCTAssertTrue(vm.attachedFiles.isEmpty)
         XCTAssertEqual(vm.options, .defaults)
@@ -18,16 +18,16 @@ final class ChatViewModelTests: XCTestCase {
         vm.prompt = "   "
         await vm.send()
         XCTAssertFalse(vm.isLoading)
-        XCTAssertEqual(vm.response, "")
+        XCTAssertTrue(vm.history.isEmpty)
     }
 
     func test_send_setsLoadingAndClearsPrompt() async {
         let vm = ChatViewModel()
         vm.prompt = "hello"
         await vm.send()
-        // After stub send completes:
+        // After send completes (server error expected in test environment):
         XCTAssertFalse(vm.isLoading)
         XCTAssertEqual(vm.prompt, "")
-        XCTAssertFalse(vm.response.isEmpty)
+        XCTAssertFalse(vm.history.isEmpty)
     }
 }

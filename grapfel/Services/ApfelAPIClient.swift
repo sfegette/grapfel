@@ -12,7 +12,7 @@ struct ApfelAPIClient {
 
     // MARK: - Non-streaming completion
 
-    func complete(messages: [ChatMessage], options: ApfelOptions) async throws -> String {
+    func complete(messages: [ChatMessage], options: ApfelOptions) async throws -> CompletionResult {
         let request = try buildRequest(messages: messages, options: options, stream: false)
         let (data, response) = try await session.data(for: request)
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
@@ -21,14 +21,25 @@ struct ApfelAPIClient {
             }
             throw ApfelError.requestFailed("HTTP \(http.statusCode)")
         }
-        let completion = try JSONDecoder().decode(ChatCompletion.self, from: data)
-        return completion.choices.first?.message.content ?? ""
+        let decoder = snakeCaseDecoder()
+        let completion = try decoder.decode(ChatCompletion.self, from: data)
+        let choice = completion.choices.first
+        let finishReason = FinishReason(choice?.finishReason)
+        let content = choice?.message.content ?? ""
+        let refusal = choice?.message.refusal
+        let usage = completion.usage.map {
+            UsageInfo(promptTokens: $0.promptTokens,
+                      completionTokens: $0.completionTokens,
+                      totalTokens: $0.totalTokens)
+        }
+        return CompletionResult(content: content, finishReason: finishReason,
+                                refusal: refusal, usage: usage)
     }
 
     // MARK: - Streaming completion
 
-    /// Yields text chunks as they arrive via SSE.
-    func stream(messages: [ChatMessage], options: ApfelOptions) -> AsyncThrowingStream<String, Error> {
+    /// Yields `.token` text chunks, then `.done`, then optionally `.usage`.
+    func stream(messages: [ChatMessage], options: ApfelOptions) -> AsyncThrowingStream<StreamEvent, Error> {
         AsyncThrowingStream { continuation in
             Task {
                 do {
@@ -43,14 +54,38 @@ struct ApfelAPIClient {
                         throw ApfelError.requestFailed("HTTP \(http.statusCode)")
                     }
 
+                    let decoder = snakeCaseDecoder()
+                    var accumulatedRefusal: String? = nil
+
                     for try await line in bytes.lines {
                         guard line.hasPrefix("data: ") else { continue }
                         let payload = String(line.dropFirst(6))
                         if payload == "[DONE]" { break }
-                        if let data = payload.data(using: .utf8),
-                           let chunk = try? JSONDecoder().decode(StreamChunk.self, from: data),
-                           let delta = chunk.choices.first?.delta.content {
-                            continuation.yield(delta)
+                        guard let data = payload.data(using: .utf8),
+                              let chunk = try? decoder.decode(StreamChunk.self, from: data)
+                        else { continue }
+
+                        if let choice = chunk.choices.first {
+                            if let content = choice.delta.content, !content.isEmpty {
+                                continuation.yield(.token(content))
+                            }
+                            if let refusal = choice.delta.refusal, !refusal.isEmpty {
+                                accumulatedRefusal = (accumulatedRefusal ?? "") + refusal
+                            }
+                            if let finishReasonStr = choice.finishReason {
+                                continuation.yield(.done(
+                                    finishReason: FinishReason(finishReasonStr),
+                                    refusal: accumulatedRefusal
+                                ))
+                            }
+                        }
+
+                        if let u = chunk.usage {
+                            continuation.yield(.usage(UsageInfo(
+                                promptTokens: u.promptTokens,
+                                completionTokens: u.completionTokens,
+                                totalTokens: u.totalTokens
+                            )))
                         }
                     }
                     continuation.finish()
@@ -77,12 +112,66 @@ struct ApfelAPIClient {
             "temperature": options.temperature,
             "max_tokens": options.maxTokens,
             "stream": stream,
+            "x_context_strategy": options.contextStrategy.rawValue,
         ]
+        if stream {
+            body["stream_options"] = ["include_usage": true]
+        }
+        if options.jsonMode {
+            body["response_format"] = ["type": "json_object"]
+        }
         if let seed = options.seed { body["seed"] = seed }
+        if let maxTurns = options.contextMaxTurns { body["x_context_max_turns"] = maxTurns }
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         return request
     }
+
+    private func snakeCaseDecoder() -> JSONDecoder {
+        let d = JSONDecoder()
+        d.keyDecodingStrategy = .convertFromSnakeCase
+        return d
+    }
+}
+
+// MARK: - Result types
+
+enum FinishReason: Equatable {
+    case stop
+    case length
+    case contentFilter
+    case toolCalls
+    case unknown(String)
+
+    init(_ raw: String?) {
+        switch raw {
+        case "stop":           self = .stop
+        case "length":         self = .length
+        case "content_filter": self = .contentFilter
+        case "tool_calls":     self = .toolCalls
+        case let s?:           self = .unknown(s)
+        default:               self = .stop
+        }
+    }
+}
+
+struct UsageInfo {
+    let promptTokens: Int
+    let completionTokens: Int
+    let totalTokens: Int
+}
+
+struct CompletionResult {
+    let content: String
+    let finishReason: FinishReason
+    let refusal: String?
+    let usage: UsageInfo?
+}
+
+enum StreamEvent {
+    case token(String)
+    case done(finishReason: FinishReason, refusal: String?)
+    case usage(UsageInfo)
 }
 
 // MARK: - Response models
@@ -94,16 +183,37 @@ private struct ApfelErrorResponse: Decodable {
 
 private struct ChatCompletion: Decodable {
     struct Choice: Decodable {
-        struct Message: Decodable { let role: String; let content: String }
+        struct Message: Decodable {
+            let role: String
+            let content: String?
+            let refusal: String?
+        }
         let message: Message
+        let finishReason: String?
+    }
+    struct Usage: Decodable {
+        let promptTokens: Int
+        let completionTokens: Int
+        let totalTokens: Int
     }
     let choices: [Choice]
+    let usage: Usage?
 }
 
 private struct StreamChunk: Decodable {
     struct Choice: Decodable {
-        struct Delta: Decodable { let content: String? }
+        struct Delta: Decodable {
+            let content: String?
+            let refusal: String?
+        }
         let delta: Delta
+        let finishReason: String?
+    }
+    struct Usage: Decodable {
+        let promptTokens: Int
+        let completionTokens: Int
+        let totalTokens: Int
     }
     let choices: [Choice]
+    let usage: Usage?
 }

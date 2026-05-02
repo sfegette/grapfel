@@ -5,6 +5,7 @@ enum UserDefaultsKey {
     static let defaultTemperature = "defaultTemperature"
     static let defaultMaxTokens = "defaultMaxTokens"
     static let apfelBinaryPath = "apfelBinaryPath"
+    static let apfelPermissive = "apfelPermissive"
 }
 
 /// All generation options exposed to the user, mapped to apfel CLI flags / API fields.
@@ -12,8 +13,8 @@ struct ApfelOptions: Equatable {
     var temperature: Double = 1.0       // --temperature
     var maxTokens: Int = 2048           // --max-tokens
     var seed: Int? = nil                // --seed (nil = not set)
-    var permissive: Bool = false        // --permissive
-    var streaming: Bool = false         // --stream
+    var streaming: Bool = true           // --stream
+    var jsonMode: Bool = false           // response_format: json_object
     var systemPrompt: String = ""       // -s / --system
     var contextStrategy: ContextStrategy = .newestFirst  // --context-strategy
     var contextMaxTurns: Int? = nil     // --context-max-turns

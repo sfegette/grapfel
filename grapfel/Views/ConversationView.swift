@@ -7,6 +7,8 @@ struct ConversationView: View {
     let history: [ChatMessage]
     let streamingContent: String
     let isLoading: Bool
+    var responseAnnotation: String? = nil
+    var usageAnnotation: String? = nil
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -32,6 +34,18 @@ struct ConversationView: View {
 
                     ForEach(history) { message in
                         MessageRow(message: message)
+                    }
+
+                    // Footer: truncation/filter annotation + token usage
+                    if !isLoading, history.last?.role == .assistant {
+                        let parts = [responseAnnotation, usageAnnotation].compactMap { $0 }
+                        if !parts.isEmpty {
+                            Text(parts.joined(separator: " · "))
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .padding(.horizontal, 22)
+                                .padding(.bottom, 2)
+                        }
                     }
 
                     // In-progress assistant turn

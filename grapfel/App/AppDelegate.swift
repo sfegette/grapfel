@@ -1,5 +1,6 @@
 import AppKit
 import Carbon
+import Sparkle
 import SwiftUI
 
 // Borderless NSPanel returns canBecomeKey=false by default — override so text input works.
@@ -13,6 +14,7 @@ private final class GrapfelPanel: NSPanel {
     private var panel: GrapfelPanel!
     private var hotKeyRef: EventHotKeyRef?
     private var carbonEventHandler: EventHandlerRef?
+    private var updaterController: SPUStandardUpdaterController!
     // Global mouse-down monitor used to dismiss the panel when the user clicks outside it.
     // Replaces the old NSWindow.didResignKeyNotification approach, which had a first-launch
     // timing race: on the very first activation of a LSUIElement background process, the
@@ -25,10 +27,15 @@ private final class GrapfelPanel: NSPanel {
     private var hiddenByOutsideClickAt: Date = .distantPast
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
         setupStatusItem()
         setupPanel()
         setupGlobalHotKey()
-        Task { try? await ApfelServerManager.shared.start() }
+        Task { await ServerState.shared.retry() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -106,6 +113,14 @@ private final class GrapfelPanel: NSPanel {
 
     private func showContextMenu() {
         let menu = NSMenu()
+        let updateItem = NSMenuItem(
+            title: "Check for Updates…",
+            action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)),
+            keyEquivalent: ""
+        )
+        updateItem.target = updaterController
+        menu.addItem(updateItem)
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Grapfel", action: #selector(quitApp), keyEquivalent: "q"))
         statusItem.menu = menu
         statusItem.button?.performClick(nil)

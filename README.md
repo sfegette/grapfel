@@ -25,7 +25,7 @@ grapfel sits in your menubar. Click the icon (or press **⌘⇧Space** from anyw
 | macOS | 26 Tahoe (beta) or later |
 | Hardware | Apple Silicon (M-series) |
 | Apple Intelligence | Must be enabled in System Settings |
-| [apfel](https://github.com/Arthur-Ficial/apfel) | v0.9.0+ — see install below |
+| [apfel](https://github.com/Arthur-Ficial/apfel) | v1.3.3+ — see install below |
 
 ---
 
@@ -37,7 +37,7 @@ Download the latest release from the [Releases page](https://github.com/sfegette
 
 ### install from zip
 
-1. Download **grapfel-0.1.0-macos26.zip** from the Assets section of the release.
+1. Download the latest **grapfel-X.Y.Z-macos26.zip** from the Assets section of the release.
 2. Unzip and move `grapfel.app` to `/Applications`.
 3. **Bypass Gatekeeper** — pick either method:
 
@@ -58,9 +58,10 @@ Download the latest release from the [Releases page](https://github.com/sfegette
 grapfel requires `apfel` to be installed and available on your PATH.
 
 ```bash
-brew tap Arthur-Ficial/tap
 brew install apfel
 ```
+
+> apfel is in homebrew-core as of v1.0.0. The tap (`brew tap Arthur-Ficial/tap`) is no longer required.
 
 Verify it works:
 
@@ -146,7 +147,7 @@ The options panel exposes the main apfel generation parameters:
 | Temperature | 1.0 | Controls randomness (0.0–2.0) |
 | Max tokens | 2048 | Maximum response length |
 | Seed | — | Optional fixed seed for reproducibility |
-| Streaming | off | SSE streaming — pending apfel v0.9.x fix |
+| Streaming | on | SSE streaming — token-by-token output as the model generates |
 | Permissive | off | Disables content safety filtering |
 | System prompt | — | Sets the system role message |
 | Context strategy | newest-first | How conversation history is managed |
@@ -168,6 +169,7 @@ grapfel manages the `apfel --serve` process lifecycle: starts it on launch, heal
 AppDelegate
   ├── GrapfelPanel (NSPanel subclass — Liquid Glass, borderless, canBecomeKey)
   ├── ApfelServerManager (actor — subprocess lifecycle)
+  ├── ServerState (@Observable — propagates .starting/.running/.binaryNotFound/.startFailed to UI)
   └── Carbon hotkey (⌘⇧Space, no Input Monitoring permission required)
 
 ChatViewModel (@Observable @MainActor)
@@ -185,8 +187,7 @@ ConversationView
 
 ## known limitations
 
-- **SSE streaming not yet working** — apfel v0.9.0 closes the connection on `stream: true` requests. Non-streaming works fine (~1s response time). Will be re-enabled when fixed upstream.
-- **Global hotkey is not yet configurable** — ⌘⇧Space is hardcoded; a settings UI is on the roadmap.
+- **Global hotkey is not yet configurable** — ⌘⇧Space is hardcoded; a settings UI is on the roadmap (#8).
 - **macOS 26 only** — Apple Intelligence and Liquid Glass APIs require the macOS 26 SDK.
 
 ---
@@ -206,11 +207,13 @@ ConversationView
 - [x] App icon (interim generated; final hand-crafted artwork pending)
 - [x] Build output to `build/Release/grapfel.app` (Release config)
 - [x] Release zip published to GitHub Releases (v0.1.0)
-- [ ] Configurable hotkey in Settings
-- [ ] Error UI for binary-not-found / server-start-failed
-- [ ] SSE streaming (blocked on apfel upstream fix)
-- [ ] Full test suite
-- [ ] Final icon artwork
+- [x] Error UI for binary-not-found / server-start-failed (first-launch onboarding)
+- [x] SSE streaming (enabled — apfel 1.3.3)
+- [ ] Configurable hotkey in Settings (#8)
+- [ ] Full test suite (#10)
+- [ ] Final icon artwork (#9)
+- [ ] Sparkle auto-update
+- [ ] apfel version check + upgrade nudge
 
 ---
 

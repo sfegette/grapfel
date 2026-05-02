@@ -10,6 +10,7 @@ actor ApfelServerManager {
     private var process: Process?
     private let port: Int
     private var intentionalStop = false
+    private(set) var serverVersion: String? = nil
 
     init(port: Int = 11434) {
         self.port = port
@@ -32,7 +33,11 @@ actor ApfelServerManager {
         let binary = try findBinary()
         let p = Process()
         p.executableURL = binary
-        p.arguments = ["--serve", "--port", "\(port)"]
+        var args = ["--serve", "--port", "\(port)"]
+        if UserDefaults.standard.bool(forKey: UserDefaultsKey.apfelPermissive) {
+            args.append("--permissive")
+        }
+        p.arguments = args
         p.terminationHandler = { [weak self] _ in
             Task { await self?.handleCrash() }
         }
@@ -68,8 +73,12 @@ actor ApfelServerManager {
     func healthCheck() async -> Bool {
         guard let url = URL(string: "http://127.0.0.1:\(port)/health") else { return false }
         do {
-            let (_, response) = try await URLSession.shared.data(from: url)
-            return (response as? HTTPURLResponse)?.statusCode == 200
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else { return false }
+            if let health = try? JSONDecoder().decode(HealthResponse.self, from: data) {
+                serverVersion = health.version
+            }
+            return true
         } catch {
             return false
         }
@@ -115,6 +124,15 @@ actor ApfelServerManager {
     }
 }
 
+// MARK: - Health response
+
+private struct HealthResponse: Decodable {
+    let status: String
+    let version: String?
+}
+
+// MARK: - Errors
+
 enum ApfelError: LocalizedError {
     case binaryNotFound
     case serverStartFailed
@@ -123,7 +141,7 @@ enum ApfelError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .binaryNotFound:
-            return "apfel binary not found. Install with: brew tap Arthur-Ficial/tap && brew install apfel"
+            return "apfel binary not found. Install with: brew install apfel"
         case .serverStartFailed:
             return "apfel server failed to start. Check that port 11434 is available."
         case .requestFailed(let msg):

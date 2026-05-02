@@ -13,6 +13,13 @@ class ChatViewModel {
     var isLoading: Bool = false
     var options: ApfelOptions
     var attachedFiles: [URL] = []
+    var finishReason: FinishReason = .stop
+    var responseAnnotation: String? = nil // shown below last assistant response
+    var lastUsage: UsageInfo? = nil
+
+    var usageAnnotation: String? {
+        lastUsage.map { "\($0.totalTokens) tokens" }
+    }
 
     private let apiClient = ApfelAPIClient()
     private let historyFileURL: URL?
@@ -78,16 +85,38 @@ class ChatViewModel {
             let assistantContent: String
             if options.streaming {
                 var accumulated = ""
-                for try await chunk in apiClient.stream(messages: messages, options: options) {
-                    accumulated += chunk
-                    streamingContent = accumulated
+                var streamRefusal: String? = nil
+                for try await event in apiClient.stream(messages: messages, options: options) {
+                    switch event {
+                    case .token(let chunk):
+                        accumulated += chunk
+                        streamingContent = accumulated
+                    case .done(let reason, let refusal):
+                        finishReason = reason
+                        streamRefusal = refusal
+                    case .usage(let info):
+                        lastUsage = info
+                    }
                 }
-                assistantContent = accumulated
+                assistantContent = accumulated.isEmpty && finishReason == .contentFilter
+                    ? (streamRefusal ?? "[Content filtered by on-device policy]")
+                    : accumulated
             } else {
-                assistantContent = try await apiClient.complete(messages: messages, options: options)
+                let result = try await apiClient.complete(messages: messages, options: options)
+                finishReason = result.finishReason
+                lastUsage = result.usage
+                assistantContent = result.content.isEmpty && result.finishReason == .contentFilter
+                    ? (result.refusal ?? "[Content filtered by on-device policy]")
+                    : result.content
             }
+            responseAnnotation = finishReason == .length
+                ? "Response was truncated at the token limit."
+                : nil
             history.append(ChatMessage(role: .assistant, content: assistantContent))
         } catch {
+            finishReason = .stop
+            responseAnnotation = nil
+            lastUsage = nil
             history.append(ChatMessage(role: .assistant, content: "Error: \(error.localizedDescription)"))
         }
 
@@ -104,6 +133,9 @@ class ChatViewModel {
         streamingContent = ""
         prompt = ""
         attachedFiles = []
+        finishReason = .stop
+        responseAnnotation = nil
+        lastUsage = nil
         deleteHistoryFile()
     }
 

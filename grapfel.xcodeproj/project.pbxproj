@@ -12,14 +12,17 @@
 		4361F030CD6064C409CF5EF3 /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E3127D7E44E8363FEE0F848 /* ConversationView.swift */; };
 		518B5EABF4269570F2B1F890 /* GrapfelUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE3E4A9DDBF85AE24B2BD96 /* GrapfelUITests.swift */; };
 		57C4DDA1195B3B2409E1B197 /* ChatViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */; };
+		6236D5D520C15B018FD0D2FF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C80960A75D8568616FF99F69 /* Sparkle */; };
 		6564BAD04BDA9E8379DEF5E1 /* GrapfelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112960AEB63D0BC17D5FC70 /* GrapfelApp.swift */; };
 		70B2BB5B3AEB14AAC9138B53 /* ApfelOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F736F3FB827065B3C4816602 /* ApfelOptions.swift */; };
 		7AE4ABFB8A4F126D5CFCBA81 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */; };
 		84BDDDC25B80F04BC30F9C67 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08718FE68CCF160787C1F1BB /* Assets.xcassets */; };
 		89D92788254FDE53AA885A21 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */; };
 		99A0F09EC199EEAF2888B5EB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997EC77C475EF15B1182C5EE /* ContentView.swift */; };
+		AE12D604E5090BC6EF2A13C0 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FB9F98D5B16DE244FC6C14 /* SetupView.swift */; };
 		C4CE039D44D87DE693E31968 /* ApfelOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */; };
 		CD9575A8940A9D767B10191C /* ApfelAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */; };
+		D9913C86D788066289F829EE /* ServerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2FA6BE08F7FB056600D566 /* ServerState.swift */; };
 		E9F149D694C371AB32285A57 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3123F4D8603FDF19ED65F935 /* SettingsView.swift */; };
 		F94925494A845F74316BE21A /* OptionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */; };
 		FC105FD232632716A4A4A599 /* ApfelServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */; };
@@ -48,6 +51,7 @@
 		3112960AEB63D0BC17D5FC70 /* GrapfelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrapfelApp.swift; sourceTree = "<group>"; };
 		3123F4D8603FDF19ED65F935 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		38583EC51D936B29873F377E /* grapfel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = grapfel.entitlements; sourceTree = "<group>"; };
+		41FB9F98D5B16DE244FC6C14 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		4B53DF7F8F79B3E5A184AB04 /* grapfel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = grapfel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E3127D7E44E8363FEE0F848 /* ConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationView.swift; sourceTree = "<group>"; };
 		7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelAPIClient.swift; sourceTree = "<group>"; };
@@ -60,11 +64,23 @@
 		9CE3E4A9DDBF85AE24B2BD96 /* GrapfelUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrapfelUITests.swift; sourceTree = "<group>"; };
 		B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptInputView.swift; sourceTree = "<group>"; };
 		B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptionsTests.swift; sourceTree = "<group>"; };
+		CA2FA6BE08F7FB056600D566 /* ServerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerState.swift; sourceTree = "<group>"; };
 		CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelTests.swift; sourceTree = "<group>"; };
 		D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsPanel.swift; sourceTree = "<group>"; };
 		F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		F736F3FB827065B3C4816602 /* ApfelOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		06991FADE9A38030D7E38B02 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6236D5D520C15B018FD0D2FF /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0C7383123C3F8BE31AFCA753 /* Services */ = {
@@ -72,6 +88,7 @@
 			children = (
 				7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */,
 				9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */,
+				CA2FA6BE08F7FB056600D566 /* ServerState.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -126,6 +143,7 @@
 				D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */,
 				B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */,
 				3123F4D8603FDF19ED65F935 /* SettingsView.swift */,
+				41FB9F98D5B16DE244FC6C14 /* SetupView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -201,6 +219,7 @@
 			buildPhases = (
 				FF66A42D08CA3C0417ED41E4 /* Sources */,
 				FDA25603BADD96A4268C637F /* Resources */,
+				06991FADE9A38030D7E38B02 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -208,6 +227,7 @@
 			);
 			name = grapfel;
 			packageProductDependencies = (
+				C80960A75D8568616FF99F69 /* Sparkle */,
 			);
 			productName = grapfel;
 			productReference = 4B53DF7F8F79B3E5A184AB04 /* grapfel.app */;
@@ -241,12 +261,15 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					58166ADA6C88656D5253AAE6 = {
+						DevelopmentTeam = MX6K4V7DP6;
 						ProvisioningStyle = Automatic;
 					};
 					64BA245C7BBA87212BF4BCE1 = {
+						DevelopmentTeam = MX6K4V7DP6;
 						ProvisioningStyle = Automatic;
 					};
 					769E11985ADE9F32E09027FB = {
+						DevelopmentTeam = MX6K4V7DP6;
 						ProvisioningStyle = Automatic;
 						TestTargetID = 64BA245C7BBA87212BF4BCE1;
 					};
@@ -261,6 +284,9 @@
 			);
 			mainGroup = 4967043DC3C9A2A6232FD552;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				437C4F0905CCAED3B6C86A02 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 72ECBEA6DA6E4EBAB47B4DD0 /* Products */;
 			projectDirPath = "";
@@ -317,7 +343,9 @@
 				6564BAD04BDA9E8379DEF5E1 /* GrapfelApp.swift in Sources */,
 				F94925494A845F74316BE21A /* OptionsPanel.swift in Sources */,
 				1EA3435E6DB7B94ED437B0A6 /* PromptInputView.swift in Sources */,
+				D9913C86D788066289F829EE /* ServerState.swift in Sources */,
 				E9F149D694C371AB32285A57 /* SettingsView.swift in Sources */,
+				AE12D604E5090BC6EF2A13C0 /* SetupView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,8 +401,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = MX6K4V7DP6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -394,7 +423,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = grapfel/Resources/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.1.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -404,7 +433,6 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
-				SYMROOT = build;
 			};
 			name = Debug;
 		};
@@ -544,8 +572,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = MX6K4V7DP6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -559,7 +588,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = grapfel/Resources/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.1.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.brilliantmindworks.grapfel;
@@ -568,7 +597,6 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
-				SYMROOT = build;
 			};
 			name = Release;
 		};
@@ -612,6 +640,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		437C4F0905CCAED3B6C86A02 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C80960A75D8568616FF99F69 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 437C4F0905CCAED3B6C86A02 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AB35F9A315F008A34EF0EED2 /* Project object */;
 }

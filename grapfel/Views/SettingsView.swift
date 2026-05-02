@@ -15,13 +15,21 @@ struct SettingsView: View {
                 .tabItem { Label("Defaults", systemImage: "slider.horizontal.3") }
         }
         .padding(20)
-        .frame(width: 400, height: 280)
+        .frame(width: 400, height: 320)
     }
 }
 
 private struct GeneralTab: View {
     @Binding var serverPort: Int
     @Binding var apfelBinaryPath: String
+    @AppStorage(UserDefaultsKey.apfelPermissive) private var apfelPermissive = false
+    @State private var isRestarting = false
+    private var serverState = ServerState.shared
+
+    init(serverPort: Binding<Int>, apfelBinaryPath: Binding<String>) {
+        self._serverPort = serverPort
+        self._apfelBinaryPath = apfelBinaryPath
+    }
 
     var body: some View {
         Form {
@@ -31,6 +39,31 @@ private struct GeneralTab: View {
                         .frame(width: 80)
                         .textFieldStyle(.roundedBorder)
                 }
+                LabeledContent("permissive mode") {
+                    Toggle("", isOn: $apfelPermissive)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+                Text("disables content safety filtering for all requests — effective on restart")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button {
+                    isRestarting = true
+                    Task {
+                        await serverState.restart()
+                        isRestarting = false
+                    }
+                } label: {
+                    if isRestarting {
+                        HStack(spacing: 6) {
+                            ProgressView().controlSize(.small)
+                            Text("Restarting…")
+                        }
+                    } else {
+                        Text("Restart Server")
+                    }
+                }
+                .disabled(isRestarting)
             }
             Section("binary") {
                 LabeledContent("path override") {

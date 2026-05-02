@@ -25,7 +25,7 @@ struct OptionsPanel: View {
                 )
 
                 // Toggles row
-                HStack(spacing: 20) {
+                HStack(spacing: 16) {
                     Toggle("stream", isOn: $options.streaming)
                         .toggleStyle(.switch)
                         .labelsHidden()
@@ -33,19 +33,13 @@ struct OptionsPanel: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Toggle("permissive", isOn: $options.permissive)
+                    Toggle("json", isOn: $options.jsonMode)
                         .toggleStyle(.switch)
                         .labelsHidden()
-                    HStack(spacing: 4) {
-                        Text("permissive")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if options.permissive {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.caption)
-                                .foregroundStyle(.yellow)
-                        }
-                    }
+                    Text("json")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
                     Spacer()
                 }
 

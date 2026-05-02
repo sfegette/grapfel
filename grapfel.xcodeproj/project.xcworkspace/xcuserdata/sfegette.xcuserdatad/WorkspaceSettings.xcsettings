@@ -3,6 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>BuildLocationStyle</key>
-	<string>UseTargetSettings</string>
+	<string>UseAppPreferences</string>
 </dict>
 </plist>
