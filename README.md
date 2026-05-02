@@ -31,25 +31,15 @@ grapfel sits in your menubar. Click the icon (or press **⌘⇧Space** from anyw
 
 ## download
 
-> **This is an unsigned build.** You must bypass Gatekeeper to run it — see instructions below.
-
 Download the latest release from the [Releases page](https://github.com/sfegette/grapfel/releases).
 
 ### install from zip
 
 1. Download the latest **grapfel-X.Y.Z-macos26.zip** from the Assets section of the release.
 2. Unzip and move `grapfel.app` to `/Applications`.
-3. **Bypass Gatekeeper** — pick either method:
+3. Launch. The **✦** icon appears in your menubar.
 
-   **Option A — Terminal (recommended):**
-   ```bash
-   xattr -dr com.apple.quarantine /Applications/grapfel.app
-   ```
-   **Option B — Finder:** Right-click `grapfel.app` → **Open** → click **Open** in the dialog.
-
-4. Launch. The **✦** icon appears in your menubar.
-
-> **Why unsigned?** Notarization requires an Apple Developer Program membership. Since grapfel targets macOS 26 beta users who are all developers, the Gatekeeper bypass above is the standard workflow.
+grapfel is signed with a Developer ID certificate and notarized by Apple — no Gatekeeper prompt, no quarantine step required.
 
 ---
 
@@ -146,11 +136,13 @@ The options panel exposes the main apfel generation parameters:
 |---|---|---|
 | Temperature | 1.0 | Controls randomness (0.0–2.0) |
 | Max tokens | 2048 | Maximum response length |
-| Seed | — | Optional fixed seed for reproducibility |
 | Streaming | on | SSE streaming — token-by-token output as the model generates |
-| Permissive | off | Disables content safety filtering |
+| JSON mode | off | Requests structured JSON output (`response_format: json_object`) |
 | System prompt | — | Sets the system role message |
-| Context strategy | newest-first | How conversation history is managed |
+
+Token usage (prompt / completion / total) is shown beneath each response.
+
+**Permissive mode** (disables content safety filtering) is a server-level setting — enable it in **Settings → General**. The server restarts automatically when toggled.
 
 ---
 
@@ -185,6 +177,12 @@ ConversationView
 
 ---
 
+## updates
+
+grapfel uses [Sparkle](https://sparkle-project.org) for automatic updates. Right-click the **✦** menubar icon → **Check for Updates…** to check manually, or let it check in the background automatically.
+
+---
+
 ## known limitations
 
 - **Global hotkey is not yet configurable** — ⌘⇧Space is hardcoded; a settings UI is on the roadmap (#8).
@@ -209,11 +207,15 @@ ConversationView
 - [x] Release zip published to GitHub Releases (v0.1.0)
 - [x] Error UI for binary-not-found / server-start-failed (first-launch onboarding)
 - [x] SSE streaming (enabled — apfel 1.3.3)
+- [x] Sparkle auto-update (v0.1.3)
+- [x] Developer ID signed + notarized (v0.1.3)
+- [x] apfel version check + upgrade nudge (v0.1.3)
+- [x] Token usage display (v0.1.3)
+- [x] JSON mode (v0.1.3)
+- [x] Permissive mode in Settings (v0.1.3)
 - [ ] Configurable hotkey in Settings (#8)
 - [ ] Full test suite (#10)
 - [ ] Final icon artwork (#9)
-- [ ] Sparkle auto-update
-- [ ] apfel version check + upgrade nudge
 
 ---
 
