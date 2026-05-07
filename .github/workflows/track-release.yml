@@ -1,0 +1,70 @@
+name: Track Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  track:
+    name: Report release ${{ github.event.release.tag_name }} to tracker
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 5
+
+    steps:
+      - name: Set metadata
+        id: meta
+        run: |
+          echo "deploy_id=$(uuidgen | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          echo "published_at=$(date -u '+%Y-%m-%d %H:%M:%S')"      >> "$GITHUB_OUTPUT"
+
+      - name: Insert build record
+        env:
+          TRACKER_TOKEN: ${{ secrets.TRACKER_API_TOKEN }}
+          TAG:          ${{ github.event.release.tag_name }}
+          SHA:          ${{ github.sha }}
+          DEPLOY_ID:    ${{ steps.meta.outputs.deploy_id }}
+          PUBLISHED_AT: ${{ steps.meta.outputs.published_at }}
+          ARTIFACT_URL: ${{ github.event.release.html_url }}
+        run: |
+          PAYLOAD=$(python3 -c "
+          import json, os
+          print(json.dumps({
+              'repo_name':    'grapfel',
+              'build_type':   'release',
+              'version_tag':  os.environ['TAG'],
+              'commit_hash':  os.environ['SHA'],
+              'branch':       'main',
+              'deploy_id':    os.environ['DEPLOY_ID'],
+              'started_at':   os.environ['PUBLISHED_AT'],
+              'status':       'success',
+              'triggered_by': 'github-release',
+              'artifact_url': os.environ['ARTIFACT_URL'],
+          }))
+          ")
+          curl -sf -X POST "http://m4mini.tailbaeb43.ts.net:8090/api/builds.php?token=${TRACKER_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            -d "$PAYLOAD" \
+            || echo "::warning::Tracker insert failed (non-fatal)"
+
+      - name: Update finished_at
+        env:
+          TRACKER_TOKEN: ${{ secrets.TRACKER_API_TOKEN }}
+          DEPLOY_ID:    ${{ steps.meta.outputs.deploy_id }}
+          PUBLISHED_AT: ${{ steps.meta.outputs.published_at }}
+        run: |
+          PAYLOAD=$(python3 -c "
+          import json, os
+          print(json.dumps({
+              'deploy_id':        os.environ['DEPLOY_ID'],
+              'status':           'success',
+              'finished_at':      os.environ['PUBLISHED_AT'],
+              'duration_seconds': 0,
+          }))
+          ")
+          curl -sf -X POST "http://m4mini.tailbaeb43.ts.net:8090/api/builds.php?token=${TRACKER_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            -d "$PAYLOAD" \
+            || echo "::warning::Tracker update failed (non-fatal)"
