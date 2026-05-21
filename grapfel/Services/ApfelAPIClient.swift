@@ -1,12 +1,21 @@
 import Foundation
 
 /// HTTP client for apfel's OpenAI-compatible API at localhost:11434/v1.
-struct ApfelAPIClient {
+protocol ApfelAPIClientProtocol: Sendable {
+    func complete(messages: [ChatMessage], options: ApfelOptions) async throws -> CompletionResult
+    func stream(messages: [ChatMessage], options: ApfelOptions) -> AsyncThrowingStream<StreamEvent, Error>
+}
+
+struct ApfelAPIClient: ApfelAPIClientProtocol {
     private let baseURL: URL
     private let session: URLSession
 
     init(port: Int = 11434, session: URLSession = .shared) {
-        self.baseURL = URL(string: "http://127.0.0.1:\(port)/v1")!
+        self.init(baseURL: URL(string: "http://127.0.0.1:\(port)/v1")!, session: session)
+    }
+
+    init(baseURL: URL, session: URLSession = .shared) {
+        self.baseURL = baseURL
         self.session = session
     }
 
@@ -155,20 +164,20 @@ enum FinishReason: Equatable {
     }
 }
 
-struct UsageInfo {
+struct UsageInfo: Equatable {
     let promptTokens: Int
     let completionTokens: Int
     let totalTokens: Int
 }
 
-struct CompletionResult {
+struct CompletionResult: Equatable {
     let content: String
     let finishReason: FinishReason
     let refusal: String?
     let usage: UsageInfo?
 }
 
-enum StreamEvent {
+enum StreamEvent: Equatable {
     case token(String)
     case done(finishReason: FinishReason, refusal: String?)
     case usage(UsageInfo)

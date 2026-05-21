@@ -70,8 +70,16 @@ targets:
     deploymentTarget: "26.0"
     sources:
       - grapfelTests
-    dependencies:
-      - target: grapfel
+      - grapfel/Models/ApfelOptions.swift
+      - grapfel/Models/ChatMessage.swift
+      - grapfel/Models/MarkdownSegmenter.swift
+      - grapfel/Services/ApfelAPIClient.swift
+      - grapfel/Services/ApfelServerManager.swift
+      - grapfel/ViewModels/ChatViewModel.swift
+    settings:
+      base:
+        TEST_HOST: ""
+        BUNDLE_LOADER: ""
 
   grapfelUITests:
     type: bundle.ui-testing

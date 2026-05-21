@@ -9,11 +9,28 @@ actor ApfelServerManager {
 
     private var process: Process?
     private let port: Int
+    private let session: URLSession
+    private let userDefaults: UserDefaults
+    private let candidateBinaryURLs: [URL]
+    private let fileExists: @Sendable (String) -> Bool
+    private let shellWhichCommand: @Sendable (String) -> String?
     private var intentionalStop = false
     private(set) var serverVersion: String? = nil
 
-    init(port: Int = 11434) {
+    init(
+        port: Int = 11434,
+        session: URLSession = .shared,
+        userDefaults: UserDefaults = .standard,
+        candidateBinaryURLs: [URL] = ApfelServerManager.defaultCandidateBinaryURLs(),
+        fileExists: @escaping @Sendable (String) -> Bool = { FileManager.default.fileExists(atPath: $0) },
+        shellWhichCommand: @escaping @Sendable (String) -> String? = ApfelServerManager.defaultShellWhich(_:)
+    ) {
         self.port = port
+        self.session = session
+        self.userDefaults = userDefaults
+        self.candidateBinaryURLs = candidateBinaryURLs
+        self.fileExists = fileExists
+        self.shellWhichCommand = shellWhichCommand
     }
 
     var isRunning: Bool {
@@ -34,7 +51,7 @@ actor ApfelServerManager {
         let p = Process()
         p.executableURL = binary
         var args = ["--serve", "--port", "\(port)"]
-        if UserDefaults.standard.bool(forKey: UserDefaultsKey.apfelPermissive) {
+        if userDefaults.bool(forKey: UserDefaultsKey.apfelPermissive) {
             args.append("--permissive")
         }
         p.arguments = args
@@ -73,7 +90,7 @@ actor ApfelServerManager {
     func healthCheck() async -> Bool {
         guard let url = URL(string: "http://127.0.0.1:\(port)/health") else { return false }
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
+            let (data, response) = try await session.data(from: url)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else { return false }
             if let health = try? JSONDecoder().decode(HealthResponse.self, from: data) {
                 serverVersion = health.version
@@ -88,29 +105,32 @@ actor ApfelServerManager {
 
     func findBinary() throws -> URL {
         // Check user-specified path override first
-        let pathOverride = UserDefaults.standard.string(forKey: UserDefaultsKey.apfelBinaryPath) ?? ""
+        let pathOverride = userDefaults.string(forKey: UserDefaultsKey.apfelBinaryPath) ?? ""
         if !pathOverride.isEmpty {
             let url = URL(fileURLWithPath: pathOverride)
-            if FileManager.default.fileExists(atPath: url.path) { return url }
+            if fileExists(url.path) { return url }
             // Override set but not found — fall through to auto-detect
         }
 
         // Search order: app bundle → /usr/local/bin → /opt/homebrew/bin → `which apfel`
-        let candidates = [
-            Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/apfel"),
-            URL(fileURLWithPath: "/usr/local/bin/apfel"),
-            URL(fileURLWithPath: "/opt/homebrew/bin/apfel"),
-        ]
-        for url in candidates where FileManager.default.fileExists(atPath: url.path) {
+        for url in candidateBinaryURLs where fileExists(url.path) {
             return url
         }
-        if let pathResult = shellWhich("apfel") {
+        if let pathResult = shellWhichCommand("apfel") {
             return URL(fileURLWithPath: pathResult)
         }
         throw ApfelError.binaryNotFound
     }
 
-    private func shellWhich(_ name: String) -> String? {
+    private static func defaultCandidateBinaryURLs() -> [URL] {
+        [
+            Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/apfel"),
+            URL(fileURLWithPath: "/usr/local/bin/apfel"),
+            URL(fileURLWithPath: "/opt/homebrew/bin/apfel"),
+        ]
+    }
+
+    private static func defaultShellWhich(_ name: String) -> String? {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/which")
         p.arguments = [name]

@@ -11,7 +11,7 @@ struct ChatMessage: Codable, Identifiable, Equatable {
         self.content = content
     }
 
-    enum Role: String, Codable {
+    enum Role: String, Codable, Equatable {
         case system
         case user
         case assistant

@@ -211,7 +211,7 @@ private struct MarkdownContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            ForEach(segments(of: text)) { segment in
+            ForEach(MarkdownSegmenter.segments(of: text)) { segment in
                 if segment.isCode {
                     Text(segment.text)
                         .font(.system(size: 12.5, design: .monospaced))
@@ -227,59 +227,6 @@ private struct MarkdownContent: View {
                 }
             }
         }
-    }
-
-    // MARK: Fenced code block parser
-
-    private struct Segment: Identifiable {
-        let id = UUID()
-        let text: String
-        let isCode: Bool
-    }
-
-    private func segments(of source: String) -> [Segment] {
-        var result: [Segment] = []
-        var remaining = source
-
-        while !remaining.isEmpty {
-            guard let openRange = remaining.range(of: "```") else {
-                // No more code fences — rest is prose
-                let trimmed = remaining.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty { result.append(Segment(text: trimmed, isCode: false)) }
-                break
-            }
-
-            // Prose before the opening fence
-            let before = String(remaining[..<openRange.lowerBound])
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !before.isEmpty { result.append(Segment(text: before, isCode: false)) }
-
-            remaining = String(remaining[openRange.upperBound...])
-
-            // Strip optional language identifier on the first line (e.g. "swift\n")
-            if let nl = remaining.firstIndex(of: "\n") {
-                let lang = String(remaining[..<nl]).trimmingCharacters(in: .whitespaces)
-                if !lang.isEmpty && lang.allSatisfy({ $0.isLetter || $0 == "-" || $0 == "_" }) {
-                    remaining = String(remaining[remaining.index(after: nl)...])
-                }
-            }
-
-            // Find closing fence
-            if let closeRange = remaining.range(of: "```") {
-                let code = String(remaining[..<closeRange.lowerBound])
-                    .trimmingCharacters(in: .newlines)
-                if !code.isEmpty { result.append(Segment(text: code, isCode: true)) }
-                remaining = String(remaining[closeRange.upperBound...])
-                if remaining.hasPrefix("\n") { remaining = String(remaining.dropFirst()) }
-            } else {
-                // Unclosed fence — treat remainder as code
-                let code = remaining.trimmingCharacters(in: .newlines)
-                if !code.isEmpty { result.append(Segment(text: code, isCode: true)) }
-                break
-            }
-        }
-
-        return result.isEmpty ? [Segment(text: source, isCode: false)] : result
     }
 
     // MARK: Inline Markdown via AttributedString

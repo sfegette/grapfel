@@ -21,8 +21,9 @@ class ChatViewModel {
         lastUsage.map { "\($0.totalTokens) tokens" }
     }
 
-    private let apiClient = ApfelAPIClient()
+    private let apiClient: any ApfelAPIClientProtocol
     private let historyFileURL: URL?
+    private let fileTextReader: (URL) -> String?
 
     /// Character budget for all attached file content combined (~2 000 tokens).
     static let fileContentCharBudget = 8_000
@@ -39,20 +40,20 @@ class ChatViewModel {
         return totalBytes > Self.fileContentCharBudget
     }
 
-    init() {
+    init(
+        apiClient: any ApfelAPIClientProtocol = ApfelAPIClient(),
+        historyFileURL: URL? = ChatViewModel.defaultHistoryFileURL(),
+        fileTextReader: @escaping (URL) -> String? = ChatViewModel.defaultReadTextFile
+    ) {
+        self.apiClient = apiClient
+        self.historyFileURL = historyFileURL
+        self.fileTextReader = fileTextReader
+
         let ud = UserDefaults.standard
         var opts = ApfelOptions.defaults
         if let t = ud.object(forKey: UserDefaultsKey.defaultTemperature) as? Double { opts.temperature = t }
         if let m = ud.object(forKey: UserDefaultsKey.defaultMaxTokens) as? Int      { opts.maxTokens = m }
         options = opts
-
-        if let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-            let dir = support.appendingPathComponent("grapfel", isDirectory: true)
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            historyFileURL = dir.appendingPathComponent("conversation.json")
-        } else {
-            historyFileURL = nil
-        }
 
         loadHistory()
     }
@@ -141,6 +142,16 @@ class ChatViewModel {
 
     // MARK: - Persistence
 
+    nonisolated private static func defaultHistoryFileURL() -> URL? {
+        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+
+        let dir = support.appendingPathComponent("grapfel", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("conversation.json")
+    }
+
     private func saveHistory() {
         guard let url = historyFileURL,
               let data = try? JSONEncoder().encode(history)
@@ -186,7 +197,7 @@ class ChatViewModel {
         guard !files.isEmpty else { return prompt }
         var remainingBudget = Self.fileContentCharBudget
         let blocks = files.compactMap { url -> String? in
-            guard let rawText = readTextFile(url) else { return nil }
+            guard let rawText = fileTextReader(url) else { return nil }
             let text: String
             if rawText.count > remainingBudget {
                 let cutoff = rawText.index(rawText.startIndex, offsetBy: max(remainingBudget, 0))
@@ -202,7 +213,7 @@ class ChatViewModel {
         return blocks.joined(separator: "\n\n") + "\n\n" + prompt
     }
 
-    private func readTextFile(_ url: URL) -> String? {
+    nonisolated private static func defaultReadTextFile(_ url: URL) -> String? {
         if let text = try? String(contentsOf: url, encoding: .utf8) { return text }
         if url.pathExtension.lowercased() == "rtf",
            let attrStr = try? NSAttributedString(
