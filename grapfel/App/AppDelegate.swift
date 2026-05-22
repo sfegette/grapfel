@@ -110,7 +110,11 @@ private final class GrapfelPanel: NSPanel {
         if NSApp.currentEvent?.type == .rightMouseUp {
             showContextMenu()
         } else {
-            togglePopover(sender)
+            // Defer past the current event so NSApp.activate() in showPanel() fires after
+            // AppKit has finished processing the click. Without this, the activation
+            // focus-handoff event lands in the outside-click monitor and immediately hides
+            // the panel (same mechanism the hotkey path avoids via Task { @MainActor in }).
+            DispatchQueue.main.async { [weak self] in self?.togglePopover(nil) }
         }
     }
 
