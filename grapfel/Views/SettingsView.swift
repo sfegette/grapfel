@@ -16,6 +16,9 @@ struct SettingsView: View {
 
             DefaultsTab(temperature: $defaultTemperature, maxTokens: $defaultMaxTokens)
                 .tabItem { Label("Defaults", systemImage: "slider.horizontal.3") }
+
+            PrivacyTab()
+                .tabItem { Label("Privacy", systemImage: "lock.shield") }
         }
         .padding(20)
         .frame(width: 420)
@@ -163,6 +166,46 @@ private struct DefaultsTab: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+private struct PrivacyTab: View {
+    @AppStorage(UserDefaultsKey.retentionMode) private var retentionModeRaw = RetentionMode.unlimited.rawValue
+    private var retentionMode: RetentionMode {
+        RetentionMode(rawValue: retentionModeRaw) ?? .unlimited
+    }
+
+    var body: some View {
+        Form {
+            Section("conversation history") {
+                Picker("retention", selection: $retentionModeRaw) {
+                    ForEach(RetentionMode.allCases) { mode in
+                        Text(mode.displayName).tag(mode.rawValue)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                Text(retentionMode == .sessionOnly
+                     ? "Conversations are never written to disk. History is lost when grapfel quits."
+                     : "Conversations are stored in ~/Library/Application Support/grapfel/ with owner-only (0600) permissions.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Section("limits") {
+                LabeledContent("max messages on disk") {
+                    Text("\(ConversationStore.maxMessages)")
+                        .font(.body.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                LabeledContent("max turns (last-n mode)") {
+                    Text("\(ConversationStore.maxTurns)")
+                        .font(.body.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .frame(height: 300)
     }
 }
 

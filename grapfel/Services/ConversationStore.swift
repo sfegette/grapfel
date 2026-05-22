@@ -1,5 +1,25 @@
 import Foundation
 
+// MARK: - Retention mode
+
+enum RetentionMode: String, CaseIterable, Identifiable, Codable {
+    case sessionOnly = "session-only"
+    case lastNTurns  = "last-n-turns"
+    case unlimited   = "unlimited"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .sessionOnly: return "Session only (no disk)"
+        case .lastNTurns:  return "Last \(ConversationStore.maxTurns) turns"
+        case .unlimited:   return "Unlimited (capped at \(ConversationStore.maxMessages) messages)"
+        }
+    }
+}
+
+// MARK: - Conversation record
+
 struct ConversationRecord: Codable, Identifiable {
     var id: UUID
     var name: String
@@ -19,6 +39,11 @@ struct ConversationRecord: Codable, Identifiable {
 final class ConversationStore {
     static let shared = ConversationStore()
 
+    /// Hard cap on messages stored per conversation (~2 000 tokens × 200 = generous but bounded).
+    nonisolated static let maxMessages = 200
+    /// Turn-pairs retained under `.lastNTurns` mode (1 turn = 1 user + 1 assistant message).
+    nonisolated static let maxTurns = 50
+
     private(set) var conversations: [ConversationRecord] = []
     private(set) var activeID: UUID?
 
@@ -35,7 +60,11 @@ final class ConversationStore {
             let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             self.directory = support.appendingPathComponent("grapfel/conversations", isDirectory: true)
         }
-        try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: self.directory,
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700]
+        )
         migrateIfNeeded()
         loadAll()
         if activeID == nil {
@@ -50,8 +79,14 @@ final class ConversationStore {
     }
 
     func save(_ record: ConversationRecord) {
-        if let data = try? encoder().encode(record) {
-            try? data.write(to: fileURL(for: record.id), options: .atomic)
+        var bounded = record
+        if bounded.messages.count > Self.maxMessages {
+            bounded.messages = Array(bounded.messages.suffix(Self.maxMessages))
+        }
+        let url = fileURL(for: bounded.id)
+        if let data = try? encoder().encode(bounded) {
+            try? data.write(to: url, options: .atomic)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
         }
         if let idx = conversations.firstIndex(where: { $0.id == record.id }) {
             conversations[idx] = record

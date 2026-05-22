@@ -7,6 +7,7 @@ enum UserDefaultsKey {
     static let apfelBinaryPath = "apfelBinaryPath"
     static let apfelPermissive = "apfelPermissive"
     static let mcpServers = "mcpServers"
+    static let retentionMode = "retentionMode"
 }
 
 /// All generation options exposed to the user, mapped to apfel CLI flags / API fields.
