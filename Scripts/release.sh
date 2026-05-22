@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="0.1.3"
+VERSION="0.1.4"
 ZIP_NAME="grapfel-${VERSION}-macos26.zip"
 BUILD_DIR="build"
 APP_PATH="${BUILD_DIR}/Build/Products/Release/grapfel.app"
@@ -214,14 +214,16 @@ cat > "${NOTES_FILE}" <<RELEASE_NOTES
 
 ### What's new in v${VERSION}
 
-- **Signed & notarized** — opens directly from /Applications, no quarantine prompt
-- **Auto-update** — Sparkle delivers new releases in-app; right-click ✦ → "Check for Updates…"
-- **Token usage** — prompt / completion / total token count shown after each response
-- **JSON mode** — toggle in the options panel to request structured JSON output
-- **Permissive mode** — Settings → General to enable; server restarts automatically
-- **apfel version check** — banner with one-click copy of \`brew upgrade apfel\` when outdated
-- **Streaming on by default** — SSE streaming fully working with apfel 1.3.3+
-- **Finish-reason surfacing** — truncated (\`length\`) and filtered (\`content_filter\`) responses annotated
+- **Conversation sidebar** — hamburger menu reveals a slide-in sidebar; browse, rename, and delete past conversations. The chat area never moves or resizes.
+- **Multi-conversation history** — each conversation is persisted as an individual JSON file in `~/Library/Application Support/grapfel/` with owner-only (0600) permissions
+- **Stop / regenerate / edit** — stop mid-stream, regenerate the last response, or edit your last message
+- **Streaming render fix** — in-progress tokens render in a fast plain-text bubble; completed turns use the Markdown renderer. Per-token re-render churn eliminated.
+- **MCP servers** — Settings → Tools to add Model Context Protocol server paths; passed to apfel on next restart
+- **Privacy tab** — Settings → Privacy to choose retention mode (session-only / last-N turns / unlimited) and review storage limits
+- **Binary hardening** — apfel binary is validated (executable bit + Mach-O check) before launch; invalid path shows a clear error with retry
+- **Orphaned-process cleanup** — `stop()` finds and kills any apfel process already listening on the configured port (e.g. from a previous SIGKILL'd Xcode run)
+- **Menubar icon reliability fix** — clicking the ✦ icon now reliably shows the panel after app-switch or idle, not just on first launch
+- **Accessibility** — all interactive controls have labels; streaming bubble is marked \`.updatesFrequently\`
 RELEASE_NOTES
 
 echo "==> Creating GitHub Release v${VERSION}..."
