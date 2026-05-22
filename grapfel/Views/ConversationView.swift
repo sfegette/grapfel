@@ -9,6 +9,9 @@ struct ConversationView: View {
     let isLoading: Bool
     var responseAnnotation: String? = nil
     var usageAnnotation: String? = nil
+    var canRegenerate: Bool = false
+    var onRegenerate: (() -> Void)? = nil
+    var onEditLast: (() -> Void)? = nil
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -19,6 +22,7 @@ struct ConversationView: View {
                             Image(systemName: "sparkles")
                                 .font(.system(size: 28))
                                 .foregroundStyle(.tertiary)
+                                .accessibilityHidden(true)
                             Text("How can I help you today?")
                                 .font(.headline)
                                 .foregroundStyle(.secondary)
@@ -30,25 +34,55 @@ struct ConversationView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 80)
                         .padding(.horizontal, 24)
+                        .accessibilityElement(children: .combine)
                     }
 
-                    ForEach(history) { message in
+                    // Completed turns — use equatable wrapper so cells don't re-render
+                    // when streamingContent changes; only the streaming bubble below changes.
+                    ForEach(history, id: \.id) { message in
                         MessageRow(message: message)
+                            .equatable()
                     }
 
-                    // Footer: truncation/filter annotation + token usage
+                    // Footer: truncation/filter annotation + token usage + conversation controls
                     if !isLoading, history.last?.role == .assistant {
                         let parts = [responseAnnotation, usageAnnotation].compactMap { $0 }
-                        if !parts.isEmpty {
-                            Text(parts.joined(separator: " · "))
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                                .padding(.horizontal, 22)
-                                .padding(.bottom, 2)
+                        if !parts.isEmpty || canRegenerate {
+                            HStack(alignment: .center, spacing: 6) {
+                                if !parts.isEmpty {
+                                    Text(parts.joined(separator: " · "))
+                                        .font(.caption2)
+                                        .foregroundStyle(.tertiary)
+                                }
+                                Spacer()
+                                if canRegenerate {
+                                    Button(action: { onEditLast?() }) {
+                                        Image(systemName: "pencil")
+                                    }
+                                    .font(.caption2)
+                                    .buttonStyle(.plain)
+                                    .foregroundStyle(.tertiary)
+                                    .help("Edit last message")
+                                    .accessibilityLabel("Edit last message")
+
+                                    Button(action: { onRegenerate?() }) {
+                                        Image(systemName: "arrow.clockwise")
+                                    }
+                                    .font(.caption2)
+                                    .buttonStyle(.plain)
+                                    .foregroundStyle(.tertiary)
+                                    .help("Regenerate response")
+                                    .accessibilityLabel("Regenerate response")
+                                }
+                            }
+                            .padding(.horizontal, 22)
+                            .padding(.bottom, 2)
                         }
                     }
 
-                    // In-progress assistant turn
+                    // In-progress assistant turn — rendered as plain Text while streaming
+                    // to avoid per-token MarkdownSegmenter re-parsing churn. Markdown is
+                    // only rendered for completed turns stored in `history`.
                     if isLoading {
                         if streamingContent.isEmpty {
                             HStack(spacing: 6) {
@@ -59,8 +93,10 @@ struct ConversationView: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.top, 2)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Generating response")
                         } else {
-                            MessageRow(message: ChatMessage(role: .assistant, content: streamingContent))
+                            StreamingBubble(content: streamingContent)
                         }
                     }
 
@@ -87,8 +123,14 @@ struct ConversationView: View {
 
 // MARK: - Message row
 
-private struct MessageRow: View {
+/// Completed turn cell. Conforms to `Equatable` so callers can use `.equatable()`
+/// to skip re-renders when only `streamingContent` (outside this cell) changes.
+private struct MessageRow: View, Equatable {
     let message: ChatMessage
+
+    nonisolated static func == (lhs: MessageRow, rhs: MessageRow) -> Bool {
+        lhs.message.id == rhs.message.id && lhs.message.content == rhs.message.content
+    }
 
     private var isUser: Bool { message.role == .user }
 
@@ -99,6 +141,7 @@ private struct MessageRow: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
                 .padding(.horizontal, 12)
+                .accessibilityHidden(true)
 
             Group {
                 if isUser {
@@ -126,6 +169,42 @@ private struct MessageRow: View {
         }
         .frame(maxWidth: .infinity, alignment: isUser ? .trailing : .leading)
         .padding(isUser ? .leading : .trailing, 40)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(isUser ? "You" : "grapfel"): \(message.content)")
+        .accessibilityAddTraits(.isStaticText)
+    }
+}
+
+// MARK: - Streaming bubble
+
+/// In-progress assistant response rendered as plain `Text` to avoid per-token
+/// `MarkdownSegmenter` re-parsing. Markdown formatting is applied only once the
+/// turn is complete and stored in `history` as a finished `MessageRow`.
+private struct StreamingBubble: View {
+    let content: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("grapfel")
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal, 12)
+                .accessibilityHidden(true)
+
+            Text(content)
+                .font(.body)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(RoundedRectangle(cornerRadius: 10).fill(.purple.opacity(0.08)))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.trailing, 40)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Generating response: \(content)")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }
 
@@ -154,6 +233,7 @@ private struct CopyButton: View {
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Copy response")
                 .contextMenu {
                     Button("Copy as Markdown") {
                         copy(content)

@@ -24,11 +24,41 @@ class ChatViewModel {
     private let apiClient: any ApfelAPIClientProtocol
     private let historyFileURL: URL?
     private let fileTextReader: (URL) -> String?
+    private var sendTask: Task<Void, Never>?
 
     /// Character budget for all attached file content combined (~2 000 tokens).
     static let fileContentCharBudget = 8_000
 
     var trimmedPrompt: String { prompt.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    var canRegenerate: Bool {
+        !isLoading && history.count >= 2 && history.last?.role == .assistant
+    }
+
+    func beginSend() {
+        sendTask = Task { await send() }
+    }
+
+    func stopGeneration() {
+        sendTask?.cancel()
+    }
+
+    func regenerate() {
+        guard canRegenerate else { return }
+        history.removeLast()
+        let userContent = history.last?.content ?? ""
+        history.removeLast()
+        prompt = userContent
+        sendTask = Task { await send() }
+    }
+
+    func editLast() {
+        guard canRegenerate else { return }
+        history.removeLast()
+        let userContent = history.last?.content ?? ""
+        history.removeLast()
+        prompt = userContent
+    }
 
     /// True when the total size of attached files is likely to exceed the context budget.
     /// Uses filesystem metadata (no content read) so it's cheap to call reactively.
@@ -42,7 +72,7 @@ class ChatViewModel {
 
     init(
         apiClient: any ApfelAPIClientProtocol = ApfelAPIClient(),
-        historyFileURL: URL? = ChatViewModel.defaultHistoryFileURL(),
+        historyFileURL: URL? = nil,
         fileTextReader: @escaping (URL) -> String? = ChatViewModel.defaultReadTextFile
     ) {
         self.apiClient = apiClient
@@ -55,7 +85,22 @@ class ChatViewModel {
         if let m = ud.object(forKey: UserDefaultsKey.defaultMaxTokens) as? Int      { opts.maxTokens = m }
         options = opts
 
-        loadHistory()
+        if historyFileURL != nil {
+            loadHistory()
+        } else {
+            history = ConversationStore.shared.active?.messages ?? []
+        }
+    }
+
+    func loadConversation(_ record: ConversationRecord) {
+        sendTask?.cancel()
+        history = record.messages
+        streamingContent = ""
+        prompt = ""
+        attachedFiles = []
+        finishReason = .stop
+        responseAnnotation = nil
+        lastUsage = nil
     }
 
     // MARK: - Send
@@ -114,6 +159,27 @@ class ChatViewModel {
                 ? "Response was truncated at the token limit."
                 : nil
             history.append(ChatMessage(role: .assistant, content: assistantContent))
+        } catch ApfelError.rateLimited {
+            finishReason = .stop
+            responseAnnotation = nil
+            lastUsage = nil
+            history.append(ChatMessage(role: .assistant, content: "Apple Intelligence is busy — try again in a moment."))
+        } catch ApfelError.modelUnavailable {
+            finishReason = .stop
+            responseAnnotation = nil
+            lastUsage = nil
+            history.append(ChatMessage(role: .assistant, content: "Apple Intelligence is not available. Check that it's enabled in System Settings → Apple Intelligence & Siri."))
+        } catch is CancellationError {
+            if !streamingContent.isEmpty {
+                history.append(ChatMessage(role: .assistant, content: streamingContent))
+                saveHistory()
+            } else if history.last?.role == .user {
+                history.removeLast()
+            }
+            streamingContent = ""
+            isLoading = false
+            attachedFiles = []
+            return
         } catch {
             finishReason = .stop
             responseAnnotation = nil
@@ -153,10 +219,24 @@ class ChatViewModel {
     }
 
     private func saveHistory() {
-        guard let url = historyFileURL,
-              let data = try? JSONEncoder().encode(history)
-        else { return }
-        try? data.write(to: url, options: .atomic)
+        if let url = historyFileURL {
+            guard let data = try? JSONEncoder().encode(history) else { return }
+            try? data.write(to: url, options: .atomic)
+        } else {
+            saveToStore()
+        }
+    }
+
+    private func saveToStore() {
+        guard var record = ConversationStore.shared.active else { return }
+        if record.name == "New conversation",
+           let first = history.first(where: { $0.role == .user }) {
+            record.name = String(first.content.prefix(40))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        record.messages = history
+        record.updatedAt = Date()
+        ConversationStore.shared.save(record)
     }
 
     private func loadHistory() {

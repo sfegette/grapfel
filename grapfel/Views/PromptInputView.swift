@@ -19,16 +19,19 @@ struct PromptInputView: View {
                                 .padding(18)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                                 .allowsHitTesting(false)
+                                .accessibilityHidden(true)
                         }
                     }
                 )
+                .accessibilityLabel("Message input")
+                .accessibilityHint("Press Return to send. Press Command-Return to insert a newline.")
                 .onKeyPress(.return, phases: .down) { press in
                     if press.modifiers.contains(.command) {
                         viewModel.prompt += "\n"
                         return .handled
                     }
                     guard !viewModel.trimmedPrompt.isEmpty, !viewModel.isLoading else { return .handled }
-                    Task { await viewModel.send() }
+                    viewModel.beginSend()
                     return .handled
                 }
 
@@ -39,6 +42,7 @@ struct PromptInputView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
+                .accessibilityLabel("Attach files")
 
                 if !viewModel.attachedFiles.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -63,17 +67,30 @@ struct PromptInputView: View {
                 .font(.caption)
                 .foregroundStyle(.orange)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityLabel("Warning: file contents exceed context budget and will be truncated before sending")
             }
 
             HStack(alignment: .center) {
                 Spacer()
 
-                Button(action: { Task { await viewModel.send() } }) {
-                    Label("send", systemImage: "arrow.up.circle.fill")
-                        .font(.callout.weight(.medium))
+                if viewModel.isLoading {
+                    Button(action: { viewModel.stopGeneration() }) {
+                        Label("stop", systemImage: "stop.circle.fill")
+                            .font(.callout.weight(.medium))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                    .accessibilityLabel("Stop generation")
+                } else {
+                    Button(action: { viewModel.beginSend() }) {
+                        Label("send", systemImage: "arrow.up.circle.fill")
+                            .font(.callout.weight(.medium))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(viewModel.trimmedPrompt.isEmpty)
+                    .accessibilityLabel("Send message")
+                    .accessibilityHint(viewModel.trimmedPrompt.isEmpty ? "Enter a message to enable" : "")
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(viewModel.trimmedPrompt.isEmpty || viewModel.isLoading)
             }
         }
         .padding(16)
@@ -98,6 +115,7 @@ private struct AttachmentChip: View {
                     .font(.caption2)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Remove \(filename)")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)

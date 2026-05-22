@@ -2,13 +2,10 @@ import Foundation
 
 /// Manages the lifecycle of `apfel --serve` as a background process.
 actor ApfelServerManager {
-    static let shared: ApfelServerManager = {
-        let port = (UserDefaults.standard.object(forKey: UserDefaultsKey.serverPort) as? Int) ?? 11434
-        return ApfelServerManager(port: port)
-    }()
+    static let shared = ApfelServerManager()
 
     private var process: Process?
-    private let port: Int
+    private var port: Int { (userDefaults.object(forKey: UserDefaultsKey.serverPort) as? Int) ?? 11434 }
     private let session: URLSession
     private let userDefaults: UserDefaults
     private let candidateBinaryURLs: [URL]
@@ -18,14 +15,12 @@ actor ApfelServerManager {
     private(set) var serverVersion: String? = nil
 
     init(
-        port: Int = 11434,
         session: URLSession = .shared,
         userDefaults: UserDefaults = .standard,
         candidateBinaryURLs: [URL] = ApfelServerManager.defaultCandidateBinaryURLs(),
         fileExists: @escaping @Sendable (String) -> Bool = { FileManager.default.fileExists(atPath: $0) },
         shellWhichCommand: @escaping @Sendable (String) -> String? = ApfelServerManager.defaultShellWhich(_:)
     ) {
-        self.port = port
         self.session = session
         self.userDefaults = userDefaults
         self.candidateBinaryURLs = candidateBinaryURLs
@@ -53,6 +48,10 @@ actor ApfelServerManager {
         var args = ["--serve", "--port", "\(port)"]
         if userDefaults.bool(forKey: UserDefaultsKey.apfelPermissive) {
             args.append("--permissive")
+        }
+        let mcpPaths = userDefaults.array(forKey: UserDefaultsKey.mcpServers) as? [String] ?? []
+        for path in mcpPaths where !path.isEmpty {
+            args += ["--mcp", path]
         }
         p.arguments = args
         p.terminationHandler = { [weak self] _ in
@@ -157,6 +156,8 @@ enum ApfelError: LocalizedError {
     case binaryNotFound
     case serverStartFailed
     case requestFailed(String)
+    case rateLimited
+    case modelUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -166,6 +167,18 @@ enum ApfelError: LocalizedError {
             return "apfel server failed to start. Check that port 11434 is available."
         case .requestFailed(let msg):
             return "Request failed: \(msg)"
+        case .rateLimited:
+            return "Apple Intelligence is busy — try again in a moment."
+        case .modelUnavailable:
+            return "Apple Intelligence is not available. Check that it's enabled in System Settings → Apple Intelligence & Siri."
+        }
+    }
+
+    static func from(httpStatus: Int, message: String) -> ApfelError {
+        switch httpStatus {
+        case 429: return .rateLimited
+        case 503: return .modelUnavailable
+        default:  return .requestFailed(message)
         }
     }
 }

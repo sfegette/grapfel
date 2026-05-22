@@ -11,18 +11,21 @@ struct SettingsView: View {
             GeneralTab(serverPort: $serverPort, apfelBinaryPath: $apfelBinaryPath)
                 .tabItem { Label("General", systemImage: "gear") }
 
+            MCPTab()
+                .tabItem { Label("Tools", systemImage: "hammer") }
+
             DefaultsTab(temperature: $defaultTemperature, maxTokens: $defaultMaxTokens)
                 .tabItem { Label("Defaults", systemImage: "slider.horizontal.3") }
         }
         .padding(20)
-        .frame(width: 400, height: 320)
+        .frame(width: 420)
     }
 }
 
 private struct GeneralTab: View {
     @Binding var serverPort: Int
     @Binding var apfelBinaryPath: String
-    @AppStorage(UserDefaultsKey.apfelPermissive) private var apfelPermissive = false
+    @AppStorage(UserDefaultsKey.apfelPermissive) private var apfelPermissive = true
     @State private var isRestarting = false
     private var serverState = ServerState.shared
 
@@ -76,6 +79,65 @@ private struct GeneralTab: View {
             }
         }
         .formStyle(.grouped)
+        .frame(height: 300)
+    }
+}
+
+private struct MCPTab: View {
+    @State private var mcpPaths: [String] = []
+    @State private var newMCPPath: String = ""
+
+    var body: some View {
+        Form {
+            Section("MCP servers") {
+                if mcpPaths.isEmpty {
+                    Text("No MCP servers configured.")
+                        .foregroundStyle(.secondary)
+                        .font(.callout)
+                }
+                ForEach(mcpPaths, id: \.self) { path in
+                    HStack {
+                        Text(path)
+                            .font(.caption.monospaced())
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        Button {
+                            mcpPaths.removeAll { $0 == path }
+                            saveMCPPaths()
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                HStack {
+                    TextField("/path/to/mcp-server or https://…", text: $newMCPPath)
+                        .textFieldStyle(.roundedBorder)
+                    Button("Add") {
+                        let trimmed = newMCPPath.trimmingCharacters(in: .whitespaces)
+                        guard !trimmed.isEmpty, !mcpPaths.contains(trimmed) else { return }
+                        mcpPaths.append(trimmed)
+                        saveMCPPaths()
+                        newMCPPath = ""
+                    }
+                    .disabled(newMCPPath.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                Text("apfel proxies tool calls through each configured MCP server — effective on restart")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .frame(height: 300)
+        .onAppear {
+            mcpPaths = UserDefaults.standard.array(forKey: UserDefaultsKey.mcpServers) as? [String] ?? []
+        }
+    }
+
+    private func saveMCPPaths() {
+        UserDefaults.standard.set(mcpPaths, forKey: UserDefaultsKey.mcpServers)
     }
 }
 

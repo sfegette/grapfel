@@ -7,16 +7,23 @@ protocol ApfelAPIClientProtocol: Sendable {
 }
 
 struct ApfelAPIClient: ApfelAPIClientProtocol {
-    private let baseURL: URL
+    private let baseURL: URL?
     private let session: URLSession
 
-    init(port: Int = 11434, session: URLSession = .shared) {
-        self.init(baseURL: URL(string: "http://127.0.0.1:\(port)/v1")!, session: session)
+    init(session: URLSession = .shared) {
+        self.baseURL = nil
+        self.session = session
     }
 
     init(baseURL: URL, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.session = session
+    }
+
+    private var resolvedBaseURL: URL {
+        if let url = baseURL { return url }
+        let port = (UserDefaults.standard.object(forKey: UserDefaultsKey.serverPort) as? Int) ?? 11434
+        return URL(string: "http://127.0.0.1:\(port)/v1")!
     }
 
     // MARK: - Non-streaming completion
@@ -26,9 +33,9 @@ struct ApfelAPIClient: ApfelAPIClientProtocol {
         let (data, response) = try await session.data(for: request)
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
             if let apiError = try? JSONDecoder().decode(ApfelErrorResponse.self, from: data) {
-                throw ApfelError.requestFailed(apiError.error.message)
+                throw ApfelError.from(httpStatus: http.statusCode, message: apiError.error.message)
             }
-            throw ApfelError.requestFailed("HTTP \(http.statusCode)")
+            throw ApfelError.from(httpStatus: http.statusCode, message: "HTTP \(http.statusCode)")
         }
         let decoder = snakeCaseDecoder()
         let completion = try decoder.decode(ChatCompletion.self, from: data)
@@ -50,7 +57,7 @@ struct ApfelAPIClient: ApfelAPIClientProtocol {
     /// Yields `.token` text chunks, then `.done`, then optionally `.usage`.
     func stream(messages: [ChatMessage], options: ApfelOptions) -> AsyncThrowingStream<StreamEvent, Error> {
         AsyncThrowingStream { continuation in
-            Task {
+            let task = Task {
                 do {
                     let request = try buildRequest(messages: messages, options: options, stream: true)
                     let (bytes, response) = try await session.bytes(for: request)
@@ -58,9 +65,9 @@ struct ApfelAPIClient: ApfelAPIClientProtocol {
                         var body = Data()
                         for try await byte in bytes { body.append(byte) }
                         if let apiError = try? JSONDecoder().decode(ApfelErrorResponse.self, from: body) {
-                            throw ApfelError.requestFailed(apiError.error.message)
+                            throw ApfelError.from(httpStatus: http.statusCode, message: apiError.error.message)
                         }
-                        throw ApfelError.requestFailed("HTTP \(http.statusCode)")
+                        throw ApfelError.from(httpStatus: http.statusCode, message: "HTTP \(http.statusCode)")
                     }
 
                     let decoder = snakeCaseDecoder()
@@ -102,13 +109,14 @@ struct ApfelAPIClient: ApfelAPIClientProtocol {
                     continuation.finish(throwing: error)
                 }
             }
+            continuation.onTermination = { _ in task.cancel() }
         }
     }
 
     // MARK: - Request building
 
     private func buildRequest(messages: [ChatMessage], options: ApfelOptions, stream: Bool) throws -> URLRequest {
-        var request = URLRequest(url: baseURL.appendingPathComponent("chat/completions"))
+        var request = URLRequest(url: resolvedBaseURL.appendingPathComponent("chat/completions"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if stream {

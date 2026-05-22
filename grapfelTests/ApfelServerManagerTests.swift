@@ -65,7 +65,7 @@ final class ApfelServerManagerTests: XCTestCase {
             return (response, data)
         }
 
-        let manager = ApfelServerManager(session: session)
+        let manager = ApfelServerManager(session: session, userDefaults: makeTestUserDefaults())
 
         let healthy = await manager.healthCheck()
 
@@ -81,7 +81,7 @@ final class ApfelServerManagerTests: XCTestCase {
             return (response, Data())
         }
 
-        let manager = ApfelServerManager(session: session)
+        let manager = ApfelServerManager(session: session, userDefaults: makeTestUserDefaults())
 
         let healthy = await manager.healthCheck()
 

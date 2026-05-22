@@ -6,6 +6,7 @@ enum UserDefaultsKey {
     static let defaultMaxTokens = "defaultMaxTokens"
     static let apfelBinaryPath = "apfelBinaryPath"
     static let apfelPermissive = "apfelPermissive"
+    static let mcpServers = "mcpServers"
 }
 
 /// All generation options exposed to the user, mapped to apfel CLI flags / API fields.

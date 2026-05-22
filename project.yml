@@ -75,6 +75,7 @@ targets:
       - grapfel/Models/MarkdownSegmenter.swift
       - grapfel/Services/ApfelAPIClient.swift
       - grapfel/Services/ApfelServerManager.swift
+      - grapfel/Services/ConversationStore.swift
       - grapfel/ViewModels/ChatViewModel.swift
     settings:
       base:

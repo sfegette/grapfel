@@ -1,7 +1,9 @@
 import Foundation
 
 struct MarkdownSegment: Identifiable, Equatable {
-    let id = UUID()
+    /// Stable identity derived from content so that `ForEach` can reuse views
+    /// across re-segmentation calls instead of creating fresh nodes every token.
+    var id: String { "\(isCode ? "code" : "text"):\(text)" }
     let text: String
     let isCode: Bool
 }
