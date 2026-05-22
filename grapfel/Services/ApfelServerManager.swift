@@ -72,10 +72,16 @@ actor ApfelServerManager {
         }
     }
 
-    func stop() {
+    func stop() async {
         intentionalStop = true
-        process?.terminate()
-        process = nil
+        if let p = process {
+            // We spawned this process — terminate it directly.
+            p.terminate()
+            process = nil
+        } else {
+            // We adopted an external process — find it by port and terminate it.
+            await killProcessOnPort(port, signal: SIGTERM)
+        }
     }
 
     private func handleCrash() async {
@@ -100,6 +106,41 @@ actor ApfelServerManager {
         }
     }
 
+    // MARK: - Port-based process kill
+
+    /// Finds the PID listening on `port` via `lsof -ti tcp:<port>`, sends `signal`,
+    /// waits up to `gracePeriod` for it to exit, then sends SIGKILL.
+    private func killProcessOnPort(_ port: Int, signal: Int32, gracePeriod: Duration = .seconds(3)) async {
+        guard let pid = pidListeningOnPort(port) else { return }
+        kill(pid, signal)
+
+        // Poll for up to gracePeriod; if still alive, force-kill.
+        let deadline = ContinuousClock.now + gracePeriod
+        while ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(200))
+            if kill(pid, 0) != 0 { return }  // process is gone
+        }
+        // Grace period elapsed — force kill.
+        kill(pid, SIGKILL)
+    }
+
+    /// Returns the PID of the process listening on the given TCP port, or nil.
+    private func pidListeningOnPort(_ port: Int) -> pid_t? {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/sbin/lsof")
+        p.arguments = ["-ti", "tcp:\(port)"]
+        let pipe = Pipe()
+        p.standardOutput = pipe
+        p.standardError = Pipe()  // suppress lsof error output
+        try? p.run()
+        p.waitUntilExit()
+        let raw = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        // lsof may return multiple PIDs (one per file descriptor); use the first.
+        let firstLine = raw.split(separator: "\n").first.map(String.init) ?? raw
+        return pid_t(firstLine)
+    }
+
     // MARK: - Binary discovery
 
     func findBinary() throws -> URL {
@@ -107,18 +148,55 @@ actor ApfelServerManager {
         let pathOverride = userDefaults.string(forKey: UserDefaultsKey.apfelBinaryPath) ?? ""
         if !pathOverride.isEmpty {
             let url = URL(fileURLWithPath: pathOverride)
-            if fileExists(url.path) { return url }
-            // Override set but not found — fall through to auto-detect
+            // Override is set — validate strictly; do not fall through to auto-detect.
+            try validateBinary(at: url)
+            return url
         }
 
         // Search order: app bundle → /usr/local/bin → /opt/homebrew/bin → `which apfel`
-        for url in candidateBinaryURLs where fileExists(url.path) {
-            return url
+        for url in candidateBinaryURLs {
+            if (try? validateBinary(at: url)) != nil { return url }
         }
         if let pathResult = shellWhichCommand("apfel") {
-            return URL(fileURLWithPath: pathResult)
+            let url = URL(fileURLWithPath: pathResult)
+            try validateBinary(at: url)
+            return url
         }
         throw ApfelError.binaryNotFound
+    }
+
+    /// Validates that the file at `url` exists and is executable.
+    /// Throws `ApfelError.binaryInvalid` if the file exists but fails validation,
+    /// or `ApfelError.binaryNotFound` if the file does not exist at all.
+    func validateBinary(at url: URL) throws {
+        let fm = FileManager.default
+        let path = url.path
+        guard fm.fileExists(atPath: path) else { throw ApfelError.binaryNotFound }
+        guard fm.isExecutableFile(atPath: path) else {
+            throw ApfelError.binaryInvalid("not executable: \(path)")
+        }
+        var isDir: ObjCBool = false
+        fm.fileExists(atPath: path, isDirectory: &isDir)
+        if isDir.boolValue { throw ApfelError.binaryInvalid("path is a directory: \(path)") }
+        // Best-effort Mach-O check — reject shell scripts named "apfel", allow Rosetta.
+        if let fileType = shellFileType(at: path) {
+            guard fileType.contains("Mach-O") || fileType.contains("executable") else {
+                throw ApfelError.binaryInvalid("not a Mach-O executable (\(fileType)): \(path)")
+            }
+        }
+    }
+
+    private func shellFileType(at path: String) -> String? {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/file")
+        p.arguments = [path]
+        let pipe = Pipe()
+        p.standardOutput = pipe
+        p.standardError = Pipe()
+        try? p.run()
+        p.waitUntilExit()
+        return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func defaultCandidateBinaryURLs() -> [URL] {
@@ -154,6 +232,7 @@ private struct HealthResponse: Decodable {
 
 enum ApfelError: LocalizedError {
     case binaryNotFound
+    case binaryInvalid(String)
     case serverStartFailed
     case requestFailed(String)
     case rateLimited
@@ -163,6 +242,8 @@ enum ApfelError: LocalizedError {
         switch self {
         case .binaryNotFound:
             return "apfel binary not found. Install with: brew install apfel"
+        case .binaryInvalid(let reason):
+            return "apfel binary is invalid: \(reason)"
         case .serverStartFailed:
             return "apfel server failed to start. Check that port 11434 is available."
         case .requestFailed(let msg):

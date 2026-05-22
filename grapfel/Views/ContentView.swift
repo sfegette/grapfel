@@ -58,6 +58,8 @@ struct ContentView: View {
             startingView
         case .binaryNotFound:
             SetupView(mode: .binaryNotFound)
+        case .binaryInvalid(let reason):
+            SetupView(mode: .binaryInvalid(reason))
         case .startFailed(let message):
             SetupView(mode: .startFailed(message))
         case .running:
