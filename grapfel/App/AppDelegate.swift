@@ -22,8 +22,13 @@ private final class GrapfelPanel: NSPanel {
     // immediately hide. A global event monitor fires before AppKit delivers the event, so
     // there is no timing dependency at all.
     private var outsideClickMonitor: Any?
-    // Set when the panel is dismissed by an outside click so togglePopover can detect that
-    // the click also landed on the status-bar button and avoid immediately re-opening.
+    // Timestamp of when the panel was last shown. The outside-click monitor ignores events
+    // within 0.25 s of this so that synthetic activation events from NSApp.activate() cannot
+    // immediately close the panel (first-launch / background-app scenario).
+    private var shownAt: Date = .distantPast
+    // Set ONLY when the panel is dismissed because the user clicked the status-bar button
+    // itself (not any other outside click). togglePopover checks this to avoid immediately
+    // re-opening the panel via the button's mouse-up action after the monitor already hid it.
     private var hiddenByOutsideClickAt: Date = .distantPast
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -169,7 +174,8 @@ private final class GrapfelPanel: NSPanel {
         }
         panel.setFrameOrigin(origin)
         panel.makeKeyAndOrderFront(nil)
-        NSApp.activate()
+        shownAt = Date()
+        activateAppForPanelPresentation()
 
         // Dismiss when the user clicks outside the panel.  A global event monitor fires
         // before AppKit delivers the click to the target window, so this approach has no
@@ -178,13 +184,24 @@ private final class GrapfelPanel: NSPanel {
             matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
         ) { [weak self] _ in
             guard let self else { return }
-            guard !self.panel.frame.contains(NSEvent.mouseLocation) else { return }
-            // Async dispatch so this runs after the current event is fully processed.
-            // The isVisible guard prevents a double-hide if the button handler already
-            // called hidePanel() synchronously for the same click.
+            let loc = NSEvent.mouseLocation
+            guard !self.panel.frame.contains(loc) else { return }
+            // Ignore events within 0.25 s of showing — NSApp.activate() can route
+            // synthetic activation clicks through the global monitor on first launch
+            // and after returning from another app, which would immediately close the panel.
+            guard Date().timeIntervalSince(self.shownAt) > 0.25 else { return }
+            // Only suppress the next togglePopover call if this click landed on the
+            // status-bar button. Any other outside click should not prevent the user
+            // from immediately reopening the panel by clicking the button.
+            let onStatusBar: Bool
+            if let btn = self.statusItem.button, let win = btn.window {
+                onStatusBar = win.convertToScreen(btn.convert(btn.bounds, to: nil)).contains(loc)
+            } else {
+                onStatusBar = false
+            }
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.panel.isVisible else { return }
-                self.hiddenByOutsideClickAt = Date()
+                if onStatusBar { self.hiddenByOutsideClickAt = Date() }
                 self.hidePanel()
             }
         }
@@ -193,6 +210,12 @@ private final class GrapfelPanel: NSPanel {
     private func hidePanel() {
         removeOutsideClickMonitor()
         panel.orderOut(nil)
+    }
+
+    private func activateAppForPanelPresentation() {
+        // LSUIElement release builds launched from Finder/open can leave the panel
+        // non-interactive if this is simplified to plain NSApp.activate().
+        NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)
     }
 
     private func removeOutsideClickMonitor() {
