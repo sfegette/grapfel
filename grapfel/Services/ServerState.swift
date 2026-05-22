@@ -9,6 +9,7 @@ final class ServerState {
         case starting
         case running
         case binaryNotFound
+        case binaryInvalid(String)
         case startFailed(String)
     }
 
@@ -33,6 +34,8 @@ final class ServerState {
             status = .running
         } catch ApfelError.binaryNotFound {
             status = .binaryNotFound
+        } catch ApfelError.binaryInvalid(let reason) {
+            status = .binaryInvalid(reason)
         } catch {
             status = .startFailed(error.localizedDescription)
         }

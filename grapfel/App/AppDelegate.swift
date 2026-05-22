@@ -58,8 +58,10 @@ private final class GrapfelPanel: NSPanel {
     }
 
     private func setupPanel() {
+        // Panel is always 621 pt wide. The left 201 pt are transparent (sidebar space);
+        // the right 420 pt are the visible chat area. The panel never resizes.
         panel = GrapfelPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 580),
+            contentRect: NSRect(x: 0, y: 0, width: 621, height: 580),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -70,8 +72,9 @@ private final class GrapfelPanel: NSPanel {
         panel.level = .popUpMenu
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        // NSHostingView must be the direct contentView so SwiftUI's responder chain works
+        // sizingOptions = [] prevents the hosting view from auto-resizing the panel.
         let hv = NSHostingView(rootView: ContentView())
+        hv.sizingOptions = []
         hv.wantsLayer = true
         hv.layer?.backgroundColor = NSColor.clear.cgColor
         panel.contentView = hv
@@ -143,20 +146,26 @@ private final class GrapfelPanel: NSPanel {
     private func showPanel() {
         removeOutsideClickMonitor()
 
+        // The chat area occupies the right 420 pt of the 621-pt panel.
+        // Position so the chat area appears centered below the status bar icon,
+        // exactly where the old 420-pt panel used to be.
+        let panelWidth = panel.frame.width          // 621
+        let chatWidth: CGFloat = 420
+        let sidebarSpace = panelWidth - chatWidth   // 201
         let origin: NSPoint
         if let button = statusItem.button, let buttonWindow = button.window {
             let buttonRect = button.convert(button.bounds, to: nil)
             let screenRect = buttonWindow.convertToScreen(buttonRect)
-            origin = NSPoint(x: screenRect.midX - 210, y: screenRect.minY - 580)
+            origin = NSPoint(x: screenRect.midX - chatWidth / 2 - sidebarSpace, y: screenRect.minY - 580)
         } else if let screen = NSScreen.main {
             // Fallback when the status-item window is not yet available.
-            origin = NSPoint(x: screen.frame.maxX - 440, y: screen.frame.maxY - 606)
+            origin = NSPoint(x: screen.frame.maxX - chatWidth - sidebarSpace - 20, y: screen.frame.maxY - 606)
         } else {
             return
         }
         panel.setFrameOrigin(origin)
         panel.makeKeyAndOrderFront(nil)
-        NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)
+        NSApp.activate()
 
         // Dismiss when the user clicks outside the panel.  A global event monitor fires
         // before AppKit delivers the click to the target window, so this approach has no

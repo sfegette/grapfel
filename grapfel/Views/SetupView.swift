@@ -4,6 +4,7 @@ import AppKit
 struct SetupView: View {
     enum Mode: Equatable {
         case binaryNotFound
+        case binaryInvalid(String)
         case startFailed(String)
     }
 
@@ -51,6 +52,8 @@ struct SetupView: View {
         switch mode {
         case .binaryNotFound:
             binaryNotFoundContent
+        case .binaryInvalid(let reason):
+            binaryInvalidContent(reason)
         case .startFailed(let message):
             startFailedContent(message)
         }
@@ -85,6 +88,30 @@ struct SetupView: View {
 
                 retryButton
             }
+        }
+        .padding(.horizontal, 32)
+    }
+
+    private func binaryInvalidContent(_ reason: String) -> some View {
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.shield.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(.red)
+
+            VStack(spacing: 8) {
+                Text("apfel binary invalid")
+                    .font(.headline)
+                Text(reason)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                Text("Check Settings to verify the binary path, or clear the override to auto-detect.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+            }
+
+            retryButton
         }
         .padding(.horizontal, 32)
     }

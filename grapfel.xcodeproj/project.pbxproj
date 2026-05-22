@@ -7,25 +7,39 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		102253BFB6B80A6D7499B7AE /* ApfelAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B30B0A3BD58961475DEEC3A /* ApfelAPIClientTests.swift */; };
 		1E3765258397415995235C0F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8827AE87C86AC8402972D3C1 /* AppDelegate.swift */; };
 		1EA3435E6DB7B94ED437B0A6 /* PromptInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */; };
+		2448E02EDA0F1FB5C8D44604 /* ConversationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D2BA4BB1AB70BAE99D1E76 /* ConversationStore.swift */; };
+		33C485DAB3449A54225EA4AD /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C768033B74411C7B29EEC80 /* SidebarView.swift */; };
+		38B52BBFF5819F4F5954F122 /* MarkdownSegmenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C2942A1EC41854ABFECB704 /* MarkdownSegmenter.swift */; };
+		4028CF7A6167EE7793FBD9A9 /* ConversationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D2BA4BB1AB70BAE99D1E76 /* ConversationStore.swift */; };
 		4361F030CD6064C409CF5EF3 /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E3127D7E44E8363FEE0F848 /* ConversationView.swift */; };
+		43B3076E0A6AF74881ED2C9B /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */; };
+		477C7C4E1326C7C4F9635ACA /* MarkdownSegmenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C2942A1EC41854ABFECB704 /* MarkdownSegmenter.swift */; };
 		518B5EABF4269570F2B1F890 /* GrapfelUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE3E4A9DDBF85AE24B2BD96 /* GrapfelUITests.swift */; };
 		57C4DDA1195B3B2409E1B197 /* ChatViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */; };
 		6236D5D520C15B018FD0D2FF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C80960A75D8568616FF99F69 /* Sparkle */; };
 		6564BAD04BDA9E8379DEF5E1 /* GrapfelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112960AEB63D0BC17D5FC70 /* GrapfelApp.swift */; };
+		69497D84D9CAF16AA160129B /* ApfelServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */; };
+		699A3136C12715AB6209ECB6 /* ApfelOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F736F3FB827065B3C4816602 /* ApfelOptions.swift */; };
 		70B2BB5B3AEB14AAC9138B53 /* ApfelOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F736F3FB827065B3C4816602 /* ApfelOptions.swift */; };
 		7AE4ABFB8A4F126D5CFCBA81 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */; };
 		84BDDDC25B80F04BC30F9C67 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08718FE68CCF160787C1F1BB /* Assets.xcassets */; };
 		89D92788254FDE53AA885A21 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */; };
 		99A0F09EC199EEAF2888B5EB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997EC77C475EF15B1182C5EE /* ContentView.swift */; };
 		AE12D604E5090BC6EF2A13C0 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FB9F98D5B16DE244FC6C14 /* SetupView.swift */; };
+		BEE21DEE08C2FC5BEA0225DD /* MarkdownSegmenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA60815030FE14D7C8505FB8 /* MarkdownSegmenterTests.swift */; };
+		BF288E5D4FE9541DDB45B92B /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */; };
 		C4CE039D44D87DE693E31968 /* ApfelOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */; };
 		CD9575A8940A9D767B10191C /* ApfelAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */; };
 		D9913C86D788066289F829EE /* ServerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2FA6BE08F7FB056600D566 /* ServerState.swift */; };
+		E815C96194751759109372DC /* ApfelAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */; };
 		E9F149D694C371AB32285A57 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3123F4D8603FDF19ED65F935 /* SettingsView.swift */; };
+		F2FD2986D0E72B5BC13C922E /* ApfelServerManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 027E847796A5528DA87B088F /* ApfelServerManagerTests.swift */; };
 		F94925494A845F74316BE21A /* OptionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */; };
 		FC105FD232632716A4A4A599 /* ApfelServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */; };
+		FDD7D4E0950186179B31C259 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B72F286E1DB285CD8808D6 /* TestSupport.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,25 +50,23 @@
 			remoteGlobalIDString = 64BA245C7BBA87212BF4BCE1;
 			remoteInfo = grapfel;
 		};
-		CB00FC8FAA5690D2F54533AE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = AB35F9A315F008A34EF0EED2 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 64BA245C7BBA87212BF4BCE1;
-			remoteInfo = grapfel;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		027E847796A5528DA87B088F /* ApfelServerManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelServerManagerTests.swift; sourceTree = "<group>"; };
 		08718FE68CCF160787C1F1BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1BC962889BF1CDC146537434 /* grapfelUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = grapfelUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2C768033B74411C7B29EEC80 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		3112960AEB63D0BC17D5FC70 /* GrapfelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrapfelApp.swift; sourceTree = "<group>"; };
 		3123F4D8603FDF19ED65F935 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		38583EC51D936B29873F377E /* grapfel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = grapfel.entitlements; sourceTree = "<group>"; };
+		3B30B0A3BD58961475DEEC3A /* ApfelAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelAPIClientTests.swift; sourceTree = "<group>"; };
 		41FB9F98D5B16DE244FC6C14 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		4B53DF7F8F79B3E5A184AB04 /* grapfel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = grapfel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E3127D7E44E8363FEE0F848 /* ConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationView.swift; sourceTree = "<group>"; };
+		6C2942A1EC41854ABFECB704 /* MarkdownSegmenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSegmenter.swift; sourceTree = "<group>"; };
 		7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelAPIClient.swift; sourceTree = "<group>"; };
+		81D2BA4BB1AB70BAE99D1E76 /* ConversationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationStore.swift; sourceTree = "<group>"; };
 		85A92192171D0CCF4FB79DFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		8827AE87C86AC8402972D3C1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -65,9 +77,11 @@
 		B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptInputView.swift; sourceTree = "<group>"; };
 		B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptionsTests.swift; sourceTree = "<group>"; };
 		CA2FA6BE08F7FB056600D566 /* ServerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerState.swift; sourceTree = "<group>"; };
+		CA60815030FE14D7C8505FB8 /* MarkdownSegmenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSegmenterTests.swift; sourceTree = "<group>"; };
 		CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelTests.swift; sourceTree = "<group>"; };
 		D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsPanel.swift; sourceTree = "<group>"; };
 		DF8C05B6625DA154792A56D7 /* grapfel-dist.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "grapfel-dist.entitlements"; sourceTree = "<group>"; };
+		E2B72F286E1DB285CD8808D6 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
 		F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		F736F3FB827065B3C4816602 /* ApfelOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -89,6 +103,7 @@
 			children = (
 				7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */,
 				9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */,
+				81D2BA4BB1AB70BAE99D1E76 /* ConversationStore.swift */,
 				CA2FA6BE08F7FB056600D566 /* ServerState.swift */,
 			);
 			path = Services;
@@ -146,6 +161,7 @@
 				B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */,
 				3123F4D8603FDF19ED65F935 /* SettingsView.swift */,
 				41FB9F98D5B16DE244FC6C14 /* SetupView.swift */,
+				2C768033B74411C7B29EEC80 /* SidebarView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -171,8 +187,12 @@
 		B74A2F1C7C3FFBBB5A2F19F6 /* grapfelTests */ = {
 			isa = PBXGroup;
 			children = (
+				3B30B0A3BD58961475DEEC3A /* ApfelAPIClientTests.swift */,
 				B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */,
+				027E847796A5528DA87B088F /* ApfelServerManagerTests.swift */,
 				CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */,
+				CA60815030FE14D7C8505FB8 /* MarkdownSegmenterTests.swift */,
+				E2B72F286E1DB285CD8808D6 /* TestSupport.swift */,
 			);
 			path = grapfelTests;
 			sourceTree = "<group>";
@@ -182,6 +202,7 @@
 			children = (
 				F736F3FB827065B3C4816602 /* ApfelOptions.swift */,
 				F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */,
+				6C2942A1EC41854ABFECB704 /* MarkdownSegmenter.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -206,7 +227,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				021DF6B94F6F8118AE695F28 /* PBXTargetDependency */,
 			);
 			name = grapfelTests;
 			packageProductDependencies = (
@@ -260,7 +280,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					58166ADA6C88656D5253AAE6 = {
 						DevelopmentTeam = MX6K4V7DP6;
@@ -314,8 +334,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E815C96194751759109372DC /* ApfelAPIClient.swift in Sources */,
+				102253BFB6B80A6D7499B7AE /* ApfelAPIClientTests.swift in Sources */,
+				699A3136C12715AB6209ECB6 /* ApfelOptions.swift in Sources */,
 				C4CE039D44D87DE693E31968 /* ApfelOptionsTests.swift in Sources */,
+				69497D84D9CAF16AA160129B /* ApfelServerManager.swift in Sources */,
+				F2FD2986D0E72B5BC13C922E /* ApfelServerManagerTests.swift in Sources */,
+				BF288E5D4FE9541DDB45B92B /* ChatMessage.swift in Sources */,
+				43B3076E0A6AF74881ED2C9B /* ChatViewModel.swift in Sources */,
 				57C4DDA1195B3B2409E1B197 /* ChatViewModelTests.swift in Sources */,
+				2448E02EDA0F1FB5C8D44604 /* ConversationStore.swift in Sources */,
+				38B52BBFF5819F4F5954F122 /* MarkdownSegmenter.swift in Sources */,
+				BEE21DEE08C2FC5BEA0225DD /* MarkdownSegmenterTests.swift in Sources */,
+				FDD7D4E0950186179B31C259 /* TestSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -338,24 +369,22 @@
 				7AE4ABFB8A4F126D5CFCBA81 /* ChatMessage.swift in Sources */,
 				89D92788254FDE53AA885A21 /* ChatViewModel.swift in Sources */,
 				99A0F09EC199EEAF2888B5EB /* ContentView.swift in Sources */,
+				4028CF7A6167EE7793FBD9A9 /* ConversationStore.swift in Sources */,
 				4361F030CD6064C409CF5EF3 /* ConversationView.swift in Sources */,
 				6564BAD04BDA9E8379DEF5E1 /* GrapfelApp.swift in Sources */,
+				477C7C4E1326C7C4F9635ACA /* MarkdownSegmenter.swift in Sources */,
 				F94925494A845F74316BE21A /* OptionsPanel.swift in Sources */,
 				1EA3435E6DB7B94ED437B0A6 /* PromptInputView.swift in Sources */,
 				D9913C86D788066289F829EE /* ServerState.swift in Sources */,
 				E9F149D694C371AB32285A57 /* SettingsView.swift in Sources */,
 				AE12D604E5090BC6EF2A13C0 /* SetupView.swift in Sources */,
+				33C485DAB3449A54225EA4AD /* SidebarView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		021DF6B94F6F8118AE695F28 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 64BA245C7BBA87212BF4BCE1 /* grapfel */;
-			targetProxy = CB00FC8FAA5690D2F54533AE /* PBXContainerItemProxy */;
-		};
 		37FEE5803BF21814EE18A63D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 64BA245C7BBA87212BF4BCE1 /* grapfel */;
@@ -369,6 +398,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -401,11 +431,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 3;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = MX6K4V7DP6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -429,6 +461,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.brilliantmindworks.grapfel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
@@ -440,6 +473,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -454,8 +488,9 @@
 		146772F9893F6DF66BDA5346 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				BUNDLE_LOADER = "";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -463,7 +498,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				SDKROOT = macosx;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/grapfel.app/Contents/MacOS/grapfel";
+				TEST_HOST = "";
 			};
 			name = Debug;
 		};
@@ -473,6 +508,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = grapfel/grapfel.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENTITLEMENTS_FILE = grapfel/grapfel.entitlements;
 				INFOPLIST_FILE = grapfel/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -490,7 +526,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = grapfel/grapfel.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENTITLEMENTS_FILE = "grapfel/grapfel-dist.entitlements";
 				INFOPLIST_FILE = grapfel/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -507,7 +545,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -522,8 +562,10 @@
 		BFBD6821246F30BE59B15107 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				BUNDLE_LOADER = "";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -531,7 +573,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				SDKROOT = macosx;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/grapfel.app/Contents/MacOS/grapfel";
+				TEST_HOST = "";
 			};
 			name = Release;
 		};
@@ -540,6 +582,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -574,11 +617,13 @@
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 3;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = MX6K4V7DP6;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -597,6 +642,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;

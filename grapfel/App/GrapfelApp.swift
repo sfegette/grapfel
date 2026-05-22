@@ -7,7 +7,9 @@ struct GrapfelApp: App {
     var body: some Scene {
         // Preferences window — opens with ⌘,
         Settings {
-            SettingsView()
+            if ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] == nil {
+                SettingsView()
+            }
         }
     }
 }

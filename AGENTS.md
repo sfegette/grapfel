@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## Build & Test
 
@@ -44,13 +44,10 @@ Views (SwiftUI)                   — ContentView → PromptInputView, ResponseV
 
 ## Key Design Decisions
 
-- **Streaming is enabled** — SSE streaming is functional as of v0.1.3; `stream: true` is the default. Usage tokens are parsed from the final chunk.
+- **No streaming yet** — `stream: true` in `ApfelAPIClient` is disabled pending an upstream `apfel` fix. Non-streaming requests complete in ~1s.
 - **AppStorage keys** for user preferences: `serverPort` (default 11434), `defaultTemperature` (1.0), `defaultMaxTokens` (2048), `apfelBinaryPath` (auto-detect if blank).
 - **Enter sends, ⌘+Enter inserts newline** — handled in `PromptInputView`.
 - **Entitlements**: `network.client` (localhost HTTP) + `files.user-selected.read-only` (file attachments). Hardened Runtime is enabled.
-
-> [!IMPORTANT]
-> **AI AGENT NOTE**: Stale documentation was detected in this file regarding streaming status. Always verify implementation state against source files (e.g., `ApfelAPIClient.swift`) before assuming documentation is current. Refresh fragments/memory if desync is found.
 
 ## Requirements
 

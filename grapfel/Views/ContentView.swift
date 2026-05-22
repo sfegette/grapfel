@@ -1,19 +1,54 @@
 import SwiftUI
 
-/// Root view hosted inside the GrapfelPanel.
+private let chatWidth: CGFloat = 420
+private let sidebarWidth: CGFloat = 200
+private let panelHeight: CGFloat = 580
+private let expandBy: CGFloat = sidebarWidth + 1   // sidebar + divider
+
 struct ContentView: View {
     @State private var viewModel = ChatViewModel()
+    @State private var sidebarVisible = false
     private var serverState = ServerState.shared
+    private var store = ConversationStore.shared
 
     var body: some View {
-        mainContent
-            .frame(width: 420, height: 580)
+        // The panel is always (chatWidth + expandBy) wide. The left expandBy pts are
+        // transparent when the sidebar is hidden — the chat area never moves or resizes.
+        ZStack(alignment: .trailing) {
+            // Size-setter: keeps the ZStack at full panel width so the chat area stays
+            // right-anchored. No visual, no hit-testing.
+            Color.clear
+                .allowsHitTesting(false)
+            HStack(spacing: 0) {
+                if sidebarVisible {
+                    SidebarView()
+                        .transition(.move(edge: .leading))
+                    Divider()
+                        .transition(.opacity)
+                }
+                mainContent
+                    .frame(width: chatWidth, height: panelHeight)
+            }
             .background {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(.ultraThinMaterial)
                     .opacity(0.75)
             }
             .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .frame(width: chatWidth + expandBy, height: panelHeight)
+        .onChange(of: store.activeID) { (_: UUID?, newID: UUID?) in
+            guard let newID,
+                  let record = store.conversations.first(where: { $0.id == newID })
+            else { return }
+            viewModel.loadConversation(record)
+        }
+    }
+
+    func toggleSidebar() {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            sidebarVisible.toggle()
+        }
     }
 
     @ViewBuilder
@@ -23,6 +58,8 @@ struct ContentView: View {
             startingView
         case .binaryNotFound:
             SetupView(mode: .binaryNotFound)
+        case .binaryInvalid(let reason):
+            SetupView(mode: .binaryInvalid(reason))
         case .startFailed(let message):
             SetupView(mode: .startFailed(message))
         case .running:
@@ -42,8 +79,8 @@ struct ContentView: View {
 
     private var chatView: some View {
         VStack(spacing: 0) {
-            HeaderBar(hasHistory: !viewModel.history.isEmpty) {
-                viewModel.clearHistory()
+            HeaderBar(sidebarVisible: sidebarVisible, onToggleSidebar: toggleSidebar) {
+                store.createAndActivate()
             }
             Divider()
             if serverState.isApfelOutdated && !serverState.isUpdateBannerDismissed,
@@ -58,7 +95,10 @@ struct ContentView: View {
                 streamingContent: viewModel.streamingContent,
                 isLoading: viewModel.isLoading,
                 responseAnnotation: viewModel.responseAnnotation,
-                usageAnnotation: viewModel.usageAnnotation
+                usageAnnotation: viewModel.usageAnnotation,
+                canRegenerate: viewModel.canRegenerate,
+                onRegenerate: { viewModel.regenerate() },
+                onEditLast: { viewModel.editLast() }
             )
             Divider()
             OptionsPanel(options: $viewModel.options)
@@ -72,31 +112,39 @@ struct ContentView: View {
 
 private struct HeaderBar: View {
     @Environment(\.openSettings) private var openSettings
-    let hasHistory: Bool
-    let onClear: () -> Void
+    let sidebarVisible: Bool
+    let onToggleSidebar: () -> Void
+    let onNewConversation: () -> Void
 
     var body: some View {
         HStack {
+            Button(action: onToggleSidebar) {
+                Image(systemName: "line.3.horizontal")
+            }
+            .buttonStyle(.plain)
+            .help("Conversations")
+            .accessibilityLabel(sidebarVisible ? "Hide conversations" : "Show conversations")
+
             Image(systemName: "sparkles")
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
             Text("grapfel")
                 .font(.headline)
                 .fontWeight(.semibold)
             Spacer()
-            if hasHistory {
-                Button(action: onClear) {
-                    Image(systemName: "square.and.pencil")
-                }
-                .buttonStyle(.plain)
-                .help("New conversation")
-                .transition(.opacity)
+            Button(action: onNewConversation) {
+                Image(systemName: "square.and.pencil")
             }
+            .buttonStyle(.plain)
+            .help("New conversation")
+            .accessibilityLabel("New conversation")
             Button(action: { openSettings() }) {
                 Image(systemName: "gear")
             }
             .buttonStyle(.plain)
+            .help("Settings")
+            .accessibilityLabel("Settings")
         }
-        .animation(.easeInOut(duration: 0.15), value: hasHistory)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
     }
@@ -143,6 +191,7 @@ private struct UpdateNudgeBanner: View {
         .background(.orange.opacity(0.07))
     }
 }
+
 
 #Preview {
     ContentView()
