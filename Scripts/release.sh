@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="0.1.4"
+VERSION="0.1.5"
 ZIP_NAME="grapfel-${VERSION}-macos26.zip"
 BUILD_DIR="build"
 APP_PATH="${BUILD_DIR}/Build/Products/Release/grapfel.app"
@@ -214,16 +214,9 @@ cat > "${NOTES_FILE}" <<RELEASE_NOTES
 
 ### What's new in v${VERSION}
 
-- **Conversation sidebar** — hamburger menu reveals a slide-in sidebar; browse, rename, and delete past conversations. The chat area never moves or resizes.
-- **Multi-conversation history** — each conversation is persisted as an individual JSON file in \`~/Library/Application Support/grapfel/\` with owner-only (0600) permissions
-- **Stop / regenerate / edit** — stop mid-stream, regenerate the last response, or edit your last message
-- **Streaming render fix** — in-progress tokens render in a fast plain-text bubble; completed turns use the Markdown renderer. Per-token re-render churn eliminated.
-- **MCP servers** — Settings → Tools to add Model Context Protocol server paths; passed to apfel on next restart
-- **Privacy tab** — Settings → Privacy to choose retention mode (session-only / last-N turns / unlimited) and review storage limits
-- **Binary hardening** — apfel binary is validated (executable bit + Mach-O check) before launch; invalid path shows a clear error with retry
-- **Orphaned-process cleanup** — \`stop()\` finds and kills any apfel process already listening on the configured port (e.g. from a previous SIGKILL'd Xcode run)
-- **Menubar icon reliability fix** — clicking the ✦ icon now reliably shows the panel after app-switch or idle, not just on first launch
-- **Accessibility** — all interactive controls have labels; streaming bubble is marked \`.updatesFrequently\`
+**Bug fix release.**
+
+- **Menubar icon activation fix** — the ✦ icon now reliably opens the panel after first launch, returning from another app, or an idle period. Restores the stronger \`NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)\` activation path required for LSUIElement apps launched from Finder, and adds a 0.25 s grace window so that synthetic activation events cannot immediately close the panel.
 RELEASE_NOTES
 
 echo "==> Creating GitHub Release v${VERSION}..."
