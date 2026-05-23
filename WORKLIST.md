@@ -1,7 +1,7 @@
 # Grapfel Worklist
 
-Last updated: 2026-05-21  
-Baseline: v0.1.2 released — items 1–4 of apfel 1.3.3 upgrade complete
+Last updated: 2026-05-22  
+Baseline: v0.1.5 released on `main`; `prep/release-readiness` is the current integration branch
 
 ## Released
 
@@ -20,27 +20,26 @@ Baseline: v0.1.2 released — items 1–4 of apfel 1.3.3 upgrade complete
 
 ### Bugs
 
-_(none currently open)_
+- [ ] **#22 — Known limitation: Apple Foundation Model refuses MCP tool-use for third-party service domains**  
+  Model-side limitation; no grapfel-side fix currently available.
+
+- [ ] **#30 — Preserve block content in Markdown conversation exports**  
+  Exporter still prefixes message bodies with inline speaker labels, which can break fenced code blocks and lists.
+
+- [ ] **#35 — Correct PrivacyInfo.xcprivacy UserDefaults reason code**  
+  Privacy manifest and in-app disclosure exist, but the UserDefaults required-reason code still needs verification/correction.
 
 ### Enhancements
 
-- [ ] **#8 — Configurable hotkey UI**  
-  Preferences UI to change the global hotkey away from ⌘⇧Space. Currently hardcoded in AppDelegate via Carbon `RegisterEventHotKey`.
+_(none currently open)_
 
 ### Design
 
-- [ ] **#9 — App icon — final**  
-  Interim generated icon in place. Spec at `Scripts/icon_spec.md`. Replace by dropping a 1024px master PNG and re-running `Scripts/generate_icon.swift`.
+_(none currently open)_
 
 ---
 
 ## Backlog
-
-### Immediately actionable
-
-- [ ] **E — Homebrew install flow in SetupView**  
-  On `binaryNotFound`: detect if Homebrew binary exists and show "Install with Homebrew" button that spawns `brew install apfel`.  
-  _Files: SetupView.swift, ServerState.swift_
 
 ### Deferred (polish)
 
@@ -59,6 +58,17 @@ _(none currently open)_
 - [x] **#11 — Warn when attached file(s) exceed context budget** — orange label in PromptInputView
 - [x] **#12 — Truncate oversized attachments with [truncated] marker** — budget enforced in buildUserContent
 - [x] **#10 — Test suite** — added 21 unit tests across ChatViewModel, ApfelAPIClient, ApfelServerManager, ApfelOptions, and MarkdownSegmenter; full `xcodebuild test` passes, with the LSUIElement UI smoke test explicitly skipped under `XCUIApplication` (2026-05-21)
+- [x] **#8 — Configurable global hotkey** — Settings privacy/preferences UI now records and persists hotkeys, re-registers Carbon bindings, and surfaces failure rollback messaging (2026-05-22)
+- [x] **#9 — Final app icon artwork** — replaced interim generated purple star with shipped app icon master assets, regenerated appiconset, and added menubar template glyph (2026-05-22)
+- [x] **#19 — Add an app privacy manifest and explicit in-product privacy disclosure** — added `PrivacyInfo.xcprivacy` and in-app privacy disclosures in Settings; manifest reason-code follow-up tracked separately in `#35` (2026-05-22)
+- [x] **#26 — Conversation auto-title** — first user message titles new conversations via `ConversationTitleFormatter` (2026-05-22)
+- [x] **#27 — Conversation export: copy as Markdown or save to file** — sidebar/header export actions added for Markdown and full-archive export (2026-05-22)
+- [x] **#28 — Setup flow: detect Homebrew, guide staged install** — added `SetupChecker`, Homebrew-aware setup states, and install guidance (2026-05-22)
+- [x] **#29 — Confirm before purging stored conversations in session-only mode** — retention-mode switch now shows a destructive confirmation dialog (2026-05-22)
+- [x] **#31 — Keep conversation store memory and disk state consistent on save failure** — persistence writes now preserve in-memory state when disk writes fail (2026-05-22)
+- [x] **#32 — Wait for apfel shutdown on app termination** — app termination now gives `ApfelServerManager.stop()` a bounded chance to complete (2026-05-22)
+- [x] **#33 — Avoid force unwraps when resolving the conversation storage directory** — storage path resolution now falls back safely instead of assuming Application Support exists (2026-05-22)
+- [x] **#34 — Harden global hotkey failure handling and user visibility** — startup fallback, rollback, and visible status messaging added around hotkey registration (2026-05-22)
 - [x] **#2 — Chat opens at top, not bottom**
 - [x] **#3 — Welcome/empty-state message**
 - [x] **#4 — Attached files not read by LLM**
