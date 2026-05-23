@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="0.1.5"
+VERSION="0.2.0"
 ZIP_NAME="grapfel-${VERSION}-macos26.zip"
 BUILD_DIR="build"
 APP_PATH="${BUILD_DIR}/Build/Products/Release/grapfel.app"
@@ -214,9 +214,17 @@ cat > "${NOTES_FILE}" <<RELEASE_NOTES
 
 ### What's new in v${VERSION}
 
-**Bug fix release.**
+**Major feature release.**
 
-- **Menubar icon activation fix** — the ✦ icon now reliably opens the panel after first launch, returning from another app, or an idle period. Restores the stronger \`NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)\` activation path required for LSUIElement apps launched from Finder, and adds a 0.25 s grace window so that synthetic activation events cannot immediately close the panel.
+- **Conversations sidebar** — persistent multi-conversation history stored as secure JSON files (0600). Switch, rename, and delete conversations; in-memory and disk state stay in sync even on write failure.
+- **Conversation auto-title** — new conversations are titled from the first message (40-char word-boundary truncation) the moment you send.
+- **Configurable global hotkey** — record any key combo in Settings; grapfel registers it via Carbon, falls back to the default ⌘⇧Space on failure, and shows a visible status message if registration fails.
+- **Conversation export** — copy any conversation as Markdown or save it to a file; export all conversations as a JSON archive from the sidebar.
+- **Setup / Homebrew flow** — grapfel detects whether Homebrew and apfel are installed and walks you through staged installation before the first chat.
+- **Privacy manifest** — \`PrivacyInfo.xcprivacy\` added; in-product privacy disclosure in Settings (Privacy tab) explains what is stored and where.
+- **Refreshed icon** — new app icon and menubar template glyph.
+- **Retention modes** — choose between session-only (auto-purge on close), last-50-turns, or unlimited (capped at 200). Switching to session-only shows a destructive confirmation dialog.
+- **Termination hardening** — app quit waits up to 4 s for apfel to shut down cleanly; save-panel guard prevents outside-click from closing the panel during an NSSavePanel sheet.
 RELEASE_NOTES
 
 echo "==> Creating GitHub Release v${VERSION}..."
