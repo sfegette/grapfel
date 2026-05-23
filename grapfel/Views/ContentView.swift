@@ -56,6 +56,8 @@ struct ContentView: View {
         switch serverState.status {
         case .starting:
             startingView
+        case .homebrewNotFound:
+            SetupView(mode: .homebrewNotFound)
         case .binaryNotFound:
             SetupView(mode: .binaryNotFound)
         case .binaryInvalid(let reason):
@@ -83,6 +85,12 @@ struct ContentView: View {
                 store.createAndActivate()
             }
             Divider()
+            if let hotKeyMessage = serverState.hotKeyRegistrationMessage {
+                HotKeyWarningBanner(message: hotKeyMessage) {
+                    serverState.hotKeyRegistrationMessage = nil
+                }
+                Divider()
+            }
             if serverState.isApfelOutdated && !serverState.isUpdateBannerDismissed,
                let version = serverState.apfelVersion {
                 UpdateNudgeBanner(currentVersion: version) {
@@ -125,7 +133,12 @@ private struct HeaderBar: View {
             .help("Conversations")
             .accessibilityLabel(sidebarVisible ? "Hide conversations" : "Show conversations")
 
-            Image(systemName: "sparkles")
+            Image("StatusBarIcon")
+                .renderingMode(.template)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: 13, height: 13)
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
             Text("grapfel")
@@ -178,6 +191,32 @@ private struct UpdateNudgeBanner: View {
                     .foregroundStyle(isCopied ? .green : .secondary)
             }
             .buttonStyle(.plain)
+            Spacer()
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .background(.orange.opacity(0.07))
+    }
+}
+
+private struct HotKeyWarningBanner: View {
+    let message: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "keyboard.badge.exclamationmark")
+                .font(.caption)
+                .foregroundStyle(.orange)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
             Spacer()
             Button(action: onDismiss) {
                 Image(systemName: "xmark")

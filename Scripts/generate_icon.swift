@@ -1,11 +1,18 @@
 #!/usr/bin/swift
 // generate_icon.swift — run from repo root: swift Scripts/generate_icon.swift
-// Generates all 10 Mac app icon sizes for grapfel.
+//
+// Regenerates the 10 AppIcon.appiconset PNGs by downsampling from
+// Resources/AppIcon-master.png (the 1024×1024 master).
+//
+// Replaces the previous version that drew the icon from CoreGraphics primitives.
+// To change the artwork: edit the master SVG in Resources/grapfel-icon-master.svg,
+// re-export to PNG at 1024×1024, drop it in as AppIcon-master.png, then re-run.
 
 import AppKit
 import CoreGraphics
 
-let outputDir = "grapfel/Resources/Assets.xcassets/AppIcon.appiconset"
+let masterPath  = "grapfel/Resources/AppIcon-master.png"
+let outputDir   = "grapfel/Resources/Assets.xcassets/AppIcon.appiconset"
 
 struct IconEntry {
     let logicalSize: String   // e.g. "16x16"
@@ -27,92 +34,44 @@ let entries: [IconEntry] = [
     .init(logicalSize: "512x512", scale: "2x", pixels: 1024),
 ]
 
-// Four-pointed star path — first point at top (−π/2), alternating outer/inner radii
-func makeStar(center: CGPoint, outer: CGFloat, inner: CGFloat) -> CGPath {
-    let path = CGMutablePath()
-    for i in 0..<8 {
-        let angle = CGFloat(i) * .pi / 4 - .pi / 2
-        let r: CGFloat = i % 2 == 0 ? outer : inner
-        let pt = CGPoint(x: center.x + r * cos(angle), y: center.y + r * sin(angle))
-        if i == 0 { path.move(to: pt) } else { path.addLine(to: pt) }
-    }
-    path.closeSubpath()
-    return path
+// ── Load master ──────────────────────────────────────────────────────────────
+guard let masterImage = NSImage(contentsOfFile: masterPath) else {
+    fputs("✗ Could not load master at \(masterPath)\n", stderr)
+    exit(1)
 }
+guard let masterCGRef = masterImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+    fputs("✗ Could not get CGImage from master\n", stderr)
+    exit(1)
+}
+print("✓ Loaded master \(masterCGRef.width)×\(masterCGRef.height)")
 
-func generatePNG(pixels: Int) -> Data {
-    let s = CGFloat(pixels)
+// ── Downsample helper (high-quality bicubic via Core Graphics) ──────────────
+func downsample(_ src: CGImage, to pixels: Int) -> Data {
     let cs = CGColorSpaceCreateDeviceRGB()
     guard let ctx = CGContext(
         data: nil, width: pixels, height: pixels,
         bitsPerComponent: 8, bytesPerRow: 0, space: cs,
         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
     ) else { fatalError("Could not create CGContext at \(pixels)px") }
-
-    // ── Background: deep navy-indigo #121121 ─────────────────────────────────
-    ctx.setFillColor(CGColor(colorSpace: cs, components: [0.071, 0.067, 0.129, 1.0])!)
-    ctx.fill(CGRect(x: 0, y: 0, width: s, height: s))
-
-    // ── Purple radial bloom ───────────────────────────────────────────────────
-    let bloomColors = [
-        CGColor(colorSpace: cs, components: [0.220, 0.118, 0.435, 0.80])!,
-        CGColor(colorSpace: cs, components: [0.071, 0.067, 0.129, 0.00])!,
-    ] as CFArray
-    let bloomLocs: [CGFloat] = [0, 1]
-    if let grad = CGGradient(colorsSpace: cs, colors: bloomColors, locations: bloomLocs) {
-        ctx.drawRadialGradient(
-            grad,
-            startCenter: CGPoint(x: s / 2, y: s / 2), startRadius: 0,
-            endCenter:   CGPoint(x: s / 2, y: s / 2), endRadius: s * 0.55,
-            options: []
-        )
-    }
-
-    // ── Four-pointed star ─────────────────────────────────────────────────────
-    //  outer: 37% of canvas — makes the star fill most of the icon face
-    //  inner: 6.5% — gives the sharp, elegant taper of the ✦ glyph
-    let star = makeStar(
-        center: CGPoint(x: s / 2, y: s / 2),
-        outer: s * 0.370,
-        inner: s * 0.065
-    )
-
-    // Violet glow (skip at 16px — too small to matter)
-    if pixels >= 32 {
-        ctx.saveGState()
-        ctx.setShadow(
-            offset: .zero,
-            blur: s * 0.07,
-            color: CGColor(colorSpace: cs, components: [0.788, 0.749, 1.000, 0.85])!
-        )
-        ctx.setFillColor(CGColor(colorSpace: cs, components: [0.969, 0.961, 1.000, 1.0])!)
-        ctx.addPath(star)
-        ctx.fillPath()
-        ctx.restoreGState()
-    }
-
-    // Crisp white star on top (ensures clean edges after glow pass)
-    ctx.setFillColor(CGColor(colorSpace: cs, components: [0.969, 0.961, 1.000, 1.0])!)
-    ctx.addPath(star)
-    ctx.fillPath()
-
-    let cgImage = ctx.makeImage()!
-    let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: pixels, height: pixels))
-    let tiff = nsImage.tiffRepresentation!
-    let bmp  = NSBitmapImageRep(data: tiff)!
+    ctx.interpolationQuality = .high
+    ctx.draw(src, in: CGRect(x: 0, y: 0, width: pixels, height: pixels))
+    let out = ctx.makeImage()!
+    let ns  = NSImage(cgImage: out, size: NSSize(width: pixels, height: pixels))
+    let bmp = NSBitmapImageRep(data: ns.tiffRepresentation!)!
     return bmp.representation(using: .png, properties: [:])!
 }
 
-// ── Generate PNGs ─────────────────────────────────────────────────────────────
+// ── Generate PNGs ────────────────────────────────────────────────────────────
 let fm = FileManager.default
+try? fm.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
 for entry in entries {
-    let data = generatePNG(pixels: entry.pixels)
+    let data = downsample(masterCGRef, to: entry.pixels)
     let path = "\(outputDir)/\(entry.filename)"
     try! data.write(to: URL(fileURLWithPath: path))
     print("✓  \(entry.filename)  (\(entry.pixels)×\(entry.pixels)px)")
 }
 
-// ── Rewrite Contents.json ─────────────────────────────────────────────────────
+// ── Write Contents.json ──────────────────────────────────────────────────────
 var images: [[String: String]] = []
 for entry in entries {
     images.append([
@@ -122,12 +81,14 @@ for entry in entries {
         "size":     entry.logicalSize,
     ])
 }
-
 let contents: [String: Any] = [
     "images": images,
     "info": ["author": "xcode", "version": 1],
 ]
-let json = try! JSONSerialization.data(withJSONObject: contents, options: [.prettyPrinted, .sortedKeys])
+let json = try! JSONSerialization.data(
+    withJSONObject: contents,
+    options: [.prettyPrinted, .sortedKeys]
+)
 try! json.write(to: URL(fileURLWithPath: "\(outputDir)/Contents.json"))
 print("\n✓  Contents.json updated")
 print("\nDone — rebuild in Xcode to pick up the new icon.")

@@ -1,3 +1,4 @@
+import Carbon
 import SwiftUI
 
 struct SettingsView: View {
@@ -29,7 +30,11 @@ private struct GeneralTab: View {
     @Binding var serverPort: Int
     @Binding var apfelBinaryPath: String
     @AppStorage(UserDefaultsKey.apfelPermissive) private var apfelPermissive = true
+    @AppStorage(UserDefaultsKey.globalHotKeyKeyCode) private var globalHotKeyKeyCode = Int(GlobalHotKey.default.keyCode)
+    @AppStorage(UserDefaultsKey.globalHotKeyModifiers) private var globalHotKeyModifiers = Int(GlobalHotKey.default.carbonModifiers)
     @State private var isRestarting = false
+    @State private var hotKey = GlobalHotKey.default
+    @State private var hotKeyMessage: String? = nil
     private var serverState = ServerState.shared
 
     init(serverPort: Binding<Int>, apfelBinaryPath: Binding<String>) {
@@ -39,6 +44,38 @@ private struct GeneralTab: View {
 
     var body: some View {
         Form {
+            Section("global hotkey") {
+                HotKeyRecorderField(hotKey: $hotKey) { capturedHotKey in
+                    do {
+                        guard let appDelegate = AppDelegate.shared else {
+                            throw GlobalHotKeyError.registrationFailed(OSStatus(paramErr))
+                        }
+                        try appDelegate.applyGlobalHotKey(capturedHotKey)
+                        hotKey = capturedHotKey
+                        globalHotKeyKeyCode = Int(capturedHotKey.keyCode)
+                        globalHotKeyModifiers = Int(capturedHotKey.carbonModifiers)
+                        hotKeyMessage = "Saved \(capturedHotKey.displayString)."
+                    } catch {
+                        hotKey = GlobalHotKey.stored()
+                        hotKeyMessage = error.localizedDescription
+                    }
+                } onValidationMessage: { message in
+                    hotKeyMessage = message
+                }
+                .frame(width: 180, height: 32)
+
+                Text("Click the field, then press a shortcut with at least one modifier key. grapfel replaces the previous registration only after the new shortcut is accepted.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let hotKeyMessage {
+                    Text(hotKeyMessage)
+                        .font(.caption)
+                        .foregroundStyle(hotKeyMessage.hasPrefix("Saved") ? Color.secondary : Color.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
             Section("apfel server") {
                 LabeledContent("port") {
                     TextField("11434", value: $serverPort, format: .number)
@@ -83,6 +120,9 @@ private struct GeneralTab: View {
         }
         .formStyle(.grouped)
         .frame(height: 300)
+        .onAppear {
+            hotKey = GlobalHotKey.stored()
+        }
     }
 }
 
@@ -171,14 +211,37 @@ private struct DefaultsTab: View {
 
 private struct PrivacyTab: View {
     @AppStorage(UserDefaultsKey.retentionMode) private var retentionModeRaw = RetentionMode.unlimited.rawValue
+    @AppStorage(UserDefaultsKey.serverPort) private var serverPort = 11434
+    @State private var draftRetentionModeRaw = RetentionMode.unlimited.rawValue
+    @State private var pendingRetentionModeRaw: String? = nil
+    @State private var showSessionOnlyConfirmation = false
     private var retentionMode: RetentionMode {
-        RetentionMode(rawValue: retentionModeRaw) ?? .unlimited
+        RetentionMode(rawValue: draftRetentionModeRaw) ?? .unlimited
+    }
+    private var appSupportPath: String {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent("grapfel", isDirectory: true)
+            .path ?? "~/Library/Application Support/grapfel"
+    }
+    private var sparkleFeedURL: String {
+        Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String ?? "the configured Sparkle update feed"
     }
 
     var body: some View {
         Form {
+            Section("what stays local") {
+                Text("Prompts, responses, and selected file contents are sent only to apfel over http://127.0.0.1:\(serverPort)/v1. grapfel does not send model prompts or attachments to OpenAI or another cloud LLM provider.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Selected files are opened read-only when you attach them to a prompt. grapfel reads their text content for the current request and does not copy the original files into its own storage.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Section("conversation history") {
-                Picker("retention", selection: $retentionModeRaw) {
+                Picker("retention", selection: $draftRetentionModeRaw) {
                     ForEach(RetentionMode.allCases) { mode in
                         Text(mode.displayName).tag(mode.rawValue)
                     }
@@ -186,7 +249,13 @@ private struct PrivacyTab: View {
                 .pickerStyle(.radioGroup)
                 Text(retentionMode == .sessionOnly
                      ? "Conversations are never written to disk. History is lost when grapfel quits."
-                     : "Conversations are stored in ~/Library/Application Support/grapfel/ with owner-only (0600) permissions.")
+                     : "Conversations are stored in \(appSupportPath) with owner-only (0600/0700) permissions.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Section("network activity") {
+                Text("Sparkle checks \(sparkleFeedURL) for signed app updates. If you install an update, the download comes from the release source referenced by that feed. Prompts, responses, and attached file contents are not included in update checks.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -206,6 +275,39 @@ private struct PrivacyTab: View {
         }
         .formStyle(.grouped)
         .frame(height: 300)
+        .onAppear {
+            draftRetentionModeRaw = retentionModeRaw
+        }
+        .onChange(of: draftRetentionModeRaw) { oldValue, newValue in
+            guard oldValue != newValue else { return }
+            if newValue == RetentionMode.sessionOnly.rawValue,
+               retentionModeRaw != RetentionMode.sessionOnly.rawValue {
+                pendingRetentionModeRaw = newValue
+                showSessionOnlyConfirmation = true
+                draftRetentionModeRaw = retentionModeRaw
+            } else {
+                applyRetentionMode(newValue)
+            }
+        }
+        .alert("Delete stored conversations?", isPresented: $showSessionOnlyConfirmation) {
+            Button("Cancel", role: .cancel) {
+                pendingRetentionModeRaw = nil
+                draftRetentionModeRaw = retentionModeRaw
+            }
+            Button("Delete and Continue", role: .destructive) {
+                let newValue = pendingRetentionModeRaw ?? RetentionMode.sessionOnly.rawValue
+                applyRetentionMode(newValue)
+                pendingRetentionModeRaw = nil
+            }
+        } message: {
+            Text("Switching to Session only immediately removes saved conversations from disk. Your open chat stays available until grapfel quits.")
+        }
+    }
+
+    private func applyRetentionMode(_ newValue: String) {
+        retentionModeRaw = newValue
+        draftRetentionModeRaw = newValue
+        ConversationStore.shared.applyRetentionMode()
     }
 }
 

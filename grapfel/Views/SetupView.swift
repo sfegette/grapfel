@@ -3,6 +3,7 @@ import AppKit
 
 struct SetupView: View {
     enum Mode: Equatable {
+        case homebrewNotFound
         case binaryNotFound
         case binaryInvalid(String)
         case startFailed(String)
@@ -18,7 +19,8 @@ struct SetupView: View {
         self.mode = mode
     }
 
-    private let installCommand = "brew install apfel"
+    private let installCommand = HomebrewInstaller.installCommand
+    private let homebrewURL = URL(string: "https://brew.sh")!
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,6 +52,8 @@ struct SetupView: View {
     @ViewBuilder
     private var errorContent: some View {
         switch mode {
+        case .homebrewNotFound:
+            homebrewNotFoundContent
         case .binaryNotFound:
             binaryNotFoundContent
         case .binaryInvalid(let reason):
@@ -57,6 +61,36 @@ struct SetupView: View {
         case .startFailed(let message):
             startFailedContent(message)
         }
+    }
+
+    private var homebrewNotFoundContent: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "shippingbox.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(.orange)
+
+            VStack(spacing: 8) {
+                Text("Homebrew not installed")
+                    .font(.headline)
+                Text("grapfel uses Homebrew to install apfel, which provides the local Apple Intelligence server.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                Text("Install Homebrew first, then return here and click Retry.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+            }
+
+            HStack(spacing: 12) {
+                Button("Open brew.sh") {
+                    NSWorkspace.shared.open(homebrewURL)
+                }
+
+                retryButton
+            }
+        }
+        .padding(.horizontal, 32)
     }
 
     private var binaryNotFoundContent: some View {
@@ -68,7 +102,7 @@ struct SetupView: View {
             VStack(spacing: 8) {
                 Text("apfel not installed")
                     .font(.headline)
-                Text("grapfel requires apfel to run on-device AI.\nInstall it with Homebrew, then click Retry.")
+                Text("Homebrew is installed, but apfel is not.\nInstall it, then click Retry.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -77,6 +111,19 @@ struct SetupView: View {
             commandRow
 
             HStack(spacing: 12) {
+                if HomebrewInstaller.canInstallApfel {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(installCommand, forType: .string)
+                        NSWorkspace.shared.open(
+                            URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app")
+                        )
+                    } label: {
+                        Text("Install with Homebrew")
+                    }
+                    .help("Copies the install command and opens Terminal.")
+                }
+
                 Button("Open Terminal") {
                     NSWorkspace.shared.open(
                         URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app")

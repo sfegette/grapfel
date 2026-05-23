@@ -22,9 +22,11 @@ class ChatViewModel {
     }
 
     private let apiClient: any ApfelAPIClientProtocol
+    private let conversationStore: ConversationStore
     private let historyFileURL: URL?
     private let fileTextReader: (URL) -> String?
     private var sendTask: Task<Void, Never>?
+    private var displayedConversationID: UUID?
 
     /// Character budget for all attached file content combined (~2 000 tokens).
     static let fileContentCharBudget = 8_000
@@ -72,10 +74,12 @@ class ChatViewModel {
 
     init(
         apiClient: any ApfelAPIClientProtocol = ApfelAPIClient(),
+        conversationStore: ConversationStore = .shared,
         historyFileURL: URL? = nil,
         fileTextReader: @escaping (URL) -> String? = ChatViewModel.defaultReadTextFile
     ) {
         self.apiClient = apiClient
+        self.conversationStore = conversationStore
         self.historyFileURL = historyFileURL
         self.fileTextReader = fileTextReader
 
@@ -88,16 +92,19 @@ class ChatViewModel {
         if historyFileURL != nil {
             loadHistory()
         } else {
-            history = ConversationStore.shared.active?.messages ?? []
+            displayedConversationID = conversationStore.activeID
+            history = conversationStore.active?.messages ?? []
         }
     }
 
     func loadConversation(_ record: ConversationRecord) {
         sendTask?.cancel()
+        displayedConversationID = record.id
         history = record.messages
         streamingContent = ""
         prompt = ""
         attachedFiles = []
+        isLoading = false
         finishReason = .stop
         responseAnnotation = nil
         lastUsage = nil
@@ -109,14 +116,27 @@ class ChatViewModel {
         let trimmed = trimmedPrompt
         guard !trimmed.isEmpty else { return }
 
+        let targetConversationID: UUID? = if historyFileURL != nil {
+            nil
+        } else {
+            displayedConversationID ?? conversationStore.activeID
+        }
         let filesToAttach = attachedFiles
+        var workingHistory = history
+        var accumulatedAssistantContent = ""
+
+        let isDisplayingTargetConversation: () -> Bool = {
+            self.historyFileURL != nil || targetConversationID == nil || self.displayedConversationID == targetConversationID
+        }
 
         isLoading = true
         streamingContent = ""
         prompt = ""
 
         // history stores the clean prompt — no file dumps shown in the UI
-        history.append(ChatMessage(role: .user, content: trimmed))
+        workingHistory.append(ChatMessage(role: .user, content: trimmed))
+        history = workingHistory
+        saveHistory(workingHistory, activeConversationID: targetConversationID)
 
         var messages: [ChatMessage] = []
         let sys = options.systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -124,73 +144,95 @@ class ChatViewModel {
             messages.append(ChatMessage(role: .system, content: sys))
         }
         // Prior turns from history (clean), then current turn with file content injected
-        messages.append(contentsOf: history.dropLast())
+        messages.append(contentsOf: workingHistory.dropLast())
         messages.append(ChatMessage(role: .user, content: buildUserContent(prompt: trimmed, files: filesToAttach)))
 
         do {
             let assistantContent: String
             if options.streaming {
-                var accumulated = ""
                 var streamRefusal: String? = nil
                 for try await event in apiClient.stream(messages: messages, options: options) {
                     switch event {
                     case .token(let chunk):
-                        accumulated += chunk
-                        streamingContent = accumulated
+                        accumulatedAssistantContent += chunk
+                        if isDisplayingTargetConversation() {
+                            streamingContent = accumulatedAssistantContent
+                        }
                     case .done(let reason, let refusal):
-                        finishReason = reason
+                        if isDisplayingTargetConversation() {
+                            finishReason = reason
+                        }
                         streamRefusal = refusal
                     case .usage(let info):
-                        lastUsage = info
+                        if isDisplayingTargetConversation() {
+                            lastUsage = info
+                        }
                     }
                 }
-                assistantContent = accumulated.isEmpty && finishReason == .contentFilter
+                assistantContent = accumulatedAssistantContent.isEmpty && finishReason == .contentFilter
                     ? (streamRefusal ?? "[Content filtered by on-device policy]")
-                    : accumulated
+                    : accumulatedAssistantContent
             } else {
                 let result = try await apiClient.complete(messages: messages, options: options)
-                finishReason = result.finishReason
-                lastUsage = result.usage
+                if isDisplayingTargetConversation() {
+                    finishReason = result.finishReason
+                    lastUsage = result.usage
+                }
                 assistantContent = result.content.isEmpty && result.finishReason == .contentFilter
                     ? (result.refusal ?? "[Content filtered by on-device policy]")
                     : result.content
             }
-            responseAnnotation = finishReason == .length
-                ? "Response was truncated at the token limit."
-                : nil
-            history.append(ChatMessage(role: .assistant, content: assistantContent))
+            if isDisplayingTargetConversation() {
+                responseAnnotation = finishReason == .length
+                    ? "Response was truncated at the token limit."
+                    : nil
+            }
+            workingHistory.append(ChatMessage(role: .assistant, content: assistantContent))
         } catch ApfelError.rateLimited {
-            finishReason = .stop
-            responseAnnotation = nil
-            lastUsage = nil
-            history.append(ChatMessage(role: .assistant, content: "Apple Intelligence is busy — try again in a moment."))
+            if isDisplayingTargetConversation() {
+                finishReason = .stop
+                responseAnnotation = nil
+                lastUsage = nil
+            }
+            workingHistory.append(ChatMessage(role: .assistant, content: "Apple Intelligence is busy — try again in a moment."))
         } catch ApfelError.modelUnavailable {
-            finishReason = .stop
-            responseAnnotation = nil
-            lastUsage = nil
-            history.append(ChatMessage(role: .assistant, content: "Apple Intelligence is not available. Check that it's enabled in System Settings → Apple Intelligence & Siri."))
+            if isDisplayingTargetConversation() {
+                finishReason = .stop
+                responseAnnotation = nil
+                lastUsage = nil
+            }
+            workingHistory.append(ChatMessage(role: .assistant, content: "Apple Intelligence is not available. Check that it's enabled in System Settings → Apple Intelligence & Siri."))
         } catch is CancellationError {
-            if !streamingContent.isEmpty {
-                history.append(ChatMessage(role: .assistant, content: streamingContent))
-                saveHistory()
-            } else if history.last?.role == .user {
-                history.removeLast()
+            if !accumulatedAssistantContent.isEmpty {
+                workingHistory.append(ChatMessage(role: .assistant, content: accumulatedAssistantContent))
+                saveHistory(workingHistory, activeConversationID: targetConversationID)
+            } else if workingHistory.last?.role == .user {
+                workingHistory.removeLast()
+                saveHistory(workingHistory, activeConversationID: targetConversationID)
+            }
+            if isDisplayingTargetConversation() {
+                history = workingHistory
             }
             streamingContent = ""
             isLoading = false
             attachedFiles = []
             return
         } catch {
-            finishReason = .stop
-            responseAnnotation = nil
-            lastUsage = nil
-            history.append(ChatMessage(role: .assistant, content: "Error: \(error.localizedDescription)"))
+            if isDisplayingTargetConversation() {
+                finishReason = .stop
+                responseAnnotation = nil
+                lastUsage = nil
+            }
+            workingHistory.append(ChatMessage(role: .assistant, content: "Error: \(error.localizedDescription)"))
         }
 
+        if isDisplayingTargetConversation() {
+            history = workingHistory
+        }
         streamingContent = ""
         isLoading = false
         attachedFiles = []
-        saveHistory()
+        saveHistory(workingHistory, activeConversationID: targetConversationID)
     }
 
     // MARK: - Conversation management
@@ -218,25 +260,26 @@ class ChatViewModel {
         return dir.appendingPathComponent("conversation.json")
     }
 
-    private func saveHistory() {
+    private func saveHistory(_ historyToSave: [ChatMessage], activeConversationID: UUID? = nil) {
         if let url = historyFileURL {
-            guard let data = try? JSONEncoder().encode(history) else { return }
+            guard let data = try? JSONEncoder().encode(historyToSave) else { return }
             try? data.write(to: url, options: .atomic)
         } else {
-            saveToStore()
+            saveToStore(historyToSave, activeConversationID: activeConversationID)
         }
     }
 
-    private func saveToStore() {
-        guard var record = ConversationStore.shared.active else { return }
+    private func saveToStore(_ historyToSave: [ChatMessage], activeConversationID: UUID?) {
+        let recordID = activeConversationID ?? conversationStore.activeID
+        guard let recordID,
+              var record = conversationStore.conversations.first(where: { $0.id == recordID }) else { return }
         if record.name == "New conversation",
-           let first = history.first(where: { $0.role == .user }) {
-            record.name = String(first.content.prefix(40))
-                .trimmingCharacters(in: .whitespacesAndNewlines)
+           let first = historyToSave.first(where: { $0.role == .user }) {
+            record.name = ConversationTitleFormatter.title(for: first.content)
         }
-        record.messages = history
+        record.messages = historyToSave
         record.updatedAt = Date()
-        ConversationStore.shared.save(record)
+        conversationStore.save(record)
     }
 
     private func loadHistory() {

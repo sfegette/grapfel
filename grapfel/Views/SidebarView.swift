@@ -12,6 +12,27 @@ struct SidebarView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
+                Menu {
+                    if let active = store.active {
+                        Button("Copy Active Chat as Markdown") {
+                            ConversationExporter.copyMarkdown(active)
+                        }
+                        Button("Save Active Chat as Markdown…") {
+                            ConversationExporter.saveMarkdown(active)
+                        }
+                        Divider()
+                    }
+                    Button("Export All Conversations as JSON…") {
+                        ConversationExporter.saveAllConversations(store.conversations)
+                    }
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .menuStyle(.borderlessButton)
+                .help("Export")
+                .accessibilityLabel("Export conversations")
                 Button(action: { store.createAndActivate() }) {
                     Image(systemName: "square.and.pencil")
                         .font(.caption)
@@ -107,6 +128,13 @@ private struct ConversationRow: View {
         .contentShape(Rectangle())
         .onTapGesture { onSelect() }
         .contextMenu {
+            Button("Copy as Markdown") {
+                ConversationExporter.copyMarkdown(record)
+            }
+            Button("Save as Markdown…") {
+                ConversationExporter.saveMarkdown(record)
+            }
+            Divider()
             Button("Rename", action: onStartEdit)
             Divider()
             Button("Delete", role: .destructive, action: onDelete)

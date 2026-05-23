@@ -15,6 +15,9 @@ final class ApfelServerManagerTests: XCTestCase {
             userDefaults: defaults,
             candidateBinaryURLs: [URL(fileURLWithPath: "/tmp/candidate-apfel")],
             fileExists: { $0 == overrideURL.path },
+            isExecutableFile: { $0 == overrideURL.path },
+            fileIsDirectory: { _ in false },
+            fileTypeProvider: { _ in "Mach-O 64-bit executable arm64" },
             shellWhichCommand: { _ in
                 XCTFail("shellWhich should not be called when override exists")
                 return nil
@@ -34,6 +37,9 @@ final class ApfelServerManagerTests: XCTestCase {
             userDefaults: defaults,
             candidateBinaryURLs: [first, second],
             fileExists: { $0 == second.path },
+            isExecutableFile: { $0 == second.path },
+            fileIsDirectory: { _ in false },
+            fileTypeProvider: { _ in "Mach-O 64-bit executable arm64" },
             shellWhichCommand: { _ in
                 return "/tmp/which-apfel"
             }
@@ -45,15 +51,19 @@ final class ApfelServerManagerTests: XCTestCase {
 
     func testFindBinaryFallsBackToShellWhich() async throws {
         let defaults = makeTestUserDefaults()
+        let shellPath = "/tmp/which-apfel"
         let manager = ApfelServerManager(
             userDefaults: defaults,
             candidateBinaryURLs: [],
-            fileExists: { _ in false },
-            shellWhichCommand: { _ in "/tmp/which-apfel" }
+            fileExists: { $0 == shellPath },
+            isExecutableFile: { $0 == shellPath },
+            fileIsDirectory: { _ in false },
+            fileTypeProvider: { _ in "Mach-O 64-bit executable arm64" },
+            shellWhichCommand: { _ in shellPath }
         )
 
         let binary = try await manager.findBinary()
-        XCTAssertEqual(binary.path, "/tmp/which-apfel")
+        XCTAssertEqual(binary.path, shellPath)
     }
 
     func testHealthCheckSuccessReturnsTrueAndStoresVersion() async {
@@ -79,6 +89,22 @@ final class ApfelServerManagerTests: XCTestCase {
         MockURLProtocol.requestHandler = { request in
             let response = HTTPURLResponse(url: request.url!, statusCode: 503, httpVersion: nil, headerFields: nil)!
             return (response, Data())
+        }
+
+        let manager = ApfelServerManager(session: session, userDefaults: makeTestUserDefaults())
+
+        let healthy = await manager.healthCheck()
+
+        XCTAssertFalse(healthy)
+        let version = await manager.serverVersion
+        XCTAssertNil(version)
+    }
+
+    func testHealthCheckRejectsUnexpectedPayload() async {
+        let session = makeMockSession()
+        MockURLProtocol.requestHandler = { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            return (response, Data(#"{"ok":true}"#.utf8))
         }
 
         let manager = ApfelServerManager(session: session, userDefaults: makeTestUserDefaults())

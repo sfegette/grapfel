@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" shape-rendering="geometricPrecision">
+
+  <defs>
+    
+    <linearGradient id="bodyFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2BAA62"></stop>
+      <stop offset="45%" stop-color="#22A05A"></stop>
+      <stop offset="100%" stop-color="#157A45"></stop>
+    </linearGradient>
+
+    
+    <radialGradient id="topSpec" cx="0.35" cy="-0.05" r="0.75" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="white" stop-opacity="0.22"></stop>
+      <stop offset="55%" stop-color="white" stop-opacity="0.05"></stop>
+      <stop offset="100%" stop-color="white" stop-opacity="0"></stop>
+    </radialGradient>
+
+    
+    <radialGradient id="botShade" cx="0.5" cy="1.05" r="0.7" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="black" stop-opacity="0.18"></stop>
+      <stop offset="60%" stop-color="black" stop-opacity="0.04"></stop>
+      <stop offset="100%" stop-color="black" stop-opacity="0"></stop>
+    </radialGradient>
+
+    
+    <radialGradient id="topGlow" cx="0.45" cy="-0.10" r="0.85" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="white" stop-opacity="0.38"></stop>
+      <stop offset="35%" stop-color="white" stop-opacity="0.14"></stop>
+      <stop offset="70%" stop-color="white" stop-opacity="0.03"></stop>
+      <stop offset="100%" stop-color="white" stop-opacity="0"></stop>
+    </radialGradient>
+
+    
+    <linearGradient id="lipSpec" x1="0.10" y1="0.02" x2="0.92" y2="0.98" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="white" stop-opacity="0.78"></stop>
+      <stop offset="30%" stop-color="white" stop-opacity="0.28"></stop>
+      <stop offset="70%" stop-color="white" stop-opacity="0.06"></stop>
+      <stop offset="100%" stop-color="white" stop-opacity="0"></stop>
+    </linearGradient>
+
+    
+    <linearGradient id="edgeSpec" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="white" stop-opacity="0.78"></stop>
+      <stop offset="18%" stop-color="white" stop-opacity="0.36"></stop>
+      <stop offset="45%" stop-color="white" stop-opacity="0.10"></stop>
+      <stop offset="100%" stop-color="white" stop-opacity="0"></stop>
+    </linearGradient>
+
+    
+    <filter id="softenSpec" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4.5"></feGaussianBlur>
+    </filter>
+
+    
+    <filter id="recess" x="-25%" y="-25%" width="150%" height="150%">
+      
+      <feFlood flood-color="#000000" flood-opacity="0.95" result="floodA"></feFlood>
+      <feComposite in="floodA" in2="SourceAlpha" operator="out" result="outA"></feComposite>
+      <feGaussianBlur in="outA" stdDeviation="8.5" result="blurA"></feGaussianBlur>
+      <feOffset in="blurA" dx="11" dy="11" result="offA"></feOffset>
+      <feComposite in="offA" in2="SourceAlpha" operator="in" result="innerShadow"></feComposite>
+      
+      <feFlood flood-color="#ffffff" flood-opacity="0.32" result="floodB"></feFlood>
+      <feComposite in="floodB" in2="SourceAlpha" operator="out" result="outB"></feComposite>
+      <feGaussianBlur in="outB" stdDeviation="4.675" result="blurB"></feGaussianBlur>
+      <feOffset in="blurB" dx="-6.05" dy="-6.05" result="offB"></feOffset>
+      <feComposite in="offB" in2="SourceAlpha" operator="in" result="innerHL"></feComposite>
+      <feMerge>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+        <feMergeNode in="innerHL"></feMergeNode>
+        <feMergeNode in="innerShadow"></feMergeNode>
+      </feMerge>
+    </filter>
+
+    
+    <symbol id="apple-body" viewBox="0 0 1024 1024">
+      <path d="M 512 348 C 502 318, 460 264, 408 264 C 304 274, 196 336, 168 428 C 144 516, 184 612, 224 690 C 268 774, 344 844, 432 884 C 472 904, 502 858, 512 832 C 522 858, 552 904, 592 884 C 680 844, 756 774, 800 690 C 840 612, 880 516, 856 428 C 828 336, 720 274, 616 264 C 564 264, 522 318, 512 348 Z"></path>
+    </symbol>
+    <symbol id="apple-stem" viewBox="0 0 1024 1024">
+      <path d="M 504 344 C 502 290, 506 232, 518 174 C 528 134, 548 98, 572 102 C 588 106, 592 122, 582 130 C 568 134, 554 146, 548 162 C 540 204, 530 282, 520 334 C 518 342, 510 346, 504 344 Z"></path>
+    </symbol>
+    <symbol id="apple-leaf" viewBox="0 0 1024 1024">
+      <path d="M 544 225 C 596 153, 682 111, 770 131 C 786 139, 790 165, 776 185 C 748 227, 686 245, 612 241 C 580 239, 560 233, 544 225 Z"></path>
+    </symbol>
+
+    
+    <clipPath id="appleClip">
+      <path d="M 512 348 C 502 318, 460 264, 408 264 C 304 274, 196 336, 168 428 C 144 516, 184 612, 224 690 C 268 774, 344 844, 432 884 C 472 904, 502 858, 512 832 C 522 858, 552 904, 592 884 C 680 844, 756 774, 800 690 C 840 612, 880 516, 856 428 C 828 336, 720 274, 616 264 C 564 264, 522 318, 512 348 Z"></path>
+      <path d="M 504 344 C 502 290, 506 232, 518 174 C 528 134, 548 98, 572 102 C 588 106, 592 122, 582 130 C 568 134, 554 146, 548 162 C 540 204, 530 282, 520 334 C 518 342, 510 346, 504 344 Z"></path>
+      <path d="M 544 225 C 596 153, 682 111, 770 131 C 786 139, 790 165, 776 185 C 748 227, 686 245, 612 241 C 580 239, 560 233, 544 225 Z"></path>
+    </clipPath>
+
+    
+    <clipPath id="squircleMask">
+      <path d="M 229 0 H 795 C 909.5 0, 1024 114.5, 1024 229 V 795 C 1024 909.5, 909.5 1024, 795 1024 H 229 C 114.5 1024, 0 909.5, 0 795 V 229 C 0 114.5, 114.5 0, 229 0 Z"></path>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#squircleMask)">
+    
+    <rect width="1024" height="1024" fill="url(#bodyFill)"></rect>
+
+    
+    <rect width="1024" height="1024" fill="url(#topSpec)"></rect>
+
+    
+    <rect width="1024" height="1024" fill="url(#botShade)"></rect>
+
+    
+    <rect width="1024" height="1024" fill="url(#topGlow)"></rect>
+
+    
+    <g style="mix-blend-mode: screen" filter="url(#softenSpec)">
+      <path d="M 512 348 C 502 318, 460 264, 408 264 C 304 274, 196 336, 168 428 C 144 516, 184 612, 224 690 C 268 774, 344 844, 432 884 C 472 904, 502 858, 512 832 C 522 858, 552 904, 592 884 C 680 844, 756 774, 800 690 C 840 612, 880 516, 856 428 C 828 336, 720 274, 616 264 C 564 264, 522 318, 512 348 Z" fill="none" stroke="url(#lipSpec)" stroke-width="14" stroke-linejoin="round"></path>
+      <path d="M 504 344 C 502 290, 506 232, 518 174 C 528 134, 548 98, 572 102 C 588 106, 592 122, 582 130 C 568 134, 554 146, 548 162 C 540 204, 530 282, 520 334 C 518 342, 510 346, 504 344 Z" fill="none" stroke="url(#lipSpec)" stroke-width="8" stroke-linejoin="round"></path>
+      <path d="M 544 225 C 596 153, 682 111, 770 131 C 786 139, 790 165, 776 185 C 748 227, 686 245, 612 241 C 580 239, 560 233, 544 225 Z" fill="none" stroke="url(#lipSpec)" stroke-width="10" stroke-linejoin="round"></path>
+    </g>
+
+    
+    <g filter="url(#recess)">
+      <path d="M 512 348 C 502 318, 460 264, 408 264 C 304 274, 196 336, 168 428 C 144 516, 184 612, 224 690 C 268 774, 344 844, 432 884 C 472 904, 502 858, 512 832 C 522 858, 552 904, 592 884 C 680 844, 756 774, 800 690 C 840 612, 880 516, 856 428 C 828 336, 720 274, 616 264 C 564 264, 522 318, 512 348 Z" fill="#0a0a0f"></path>
+      <path d="M 504 344 C 502 290, 506 232, 518 174 C 528 134, 548 98, 572 102 C 588 106, 592 122, 582 130 C 568 134, 554 146, 548 162 C 540 204, 530 282, 520 334 C 518 342, 510 346, 504 344 Z" fill="#0a0a0f"></path>
+      <path d="M 544 225 C 596 153, 682 111, 770 131 C 786 139, 790 165, 776 185 C 748 227, 686 245, 612 241 C 580 239, 560 233, 544 225 Z" fill="#0a0a0f"></path>
+    </g>
+
+    
+    <g clip-path="url(#appleClip)">
+      <path d="M 512 348 C 502 318, 460 264, 408 264 C 304 274, 196 336, 168 428 C 144 516, 184 612, 224 690 C 268 774, 344 844, 432 884 C 472 904, 502 858, 512 832 C 522 858, 552 904, 592 884 C 680 844, 756 774, 800 690 C 840 612, 880 516, 856 428 C 828 336, 720 274, 616 264 C 564 264, 522 318, 512 348 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="2"></path>
+      <path d="M 504 344 C 502 290, 506 232, 518 174 C 528 134, 548 98, 572 102 C 588 106, 592 122, 582 130 C 568 134, 554 146, 548 162 C 540 204, 530 282, 520 334 C 518 342, 510 346, 504 344 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="2"></path>
+      <path d="M 544 225 C 596 153, 682 111, 770 131 C 786 139, 790 165, 776 185 C 748 227, 686 245, 612 241 C 580 239, 560 233, 544 225 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="2"></path>
+    </g>
+
+    
+    <g filter="url(#softenSpec)" style="mix-blend-mode: screen">
+      <path d="M 229 0 H 795 C 909.5 0, 1024 114.5, 1024 229 V 795 C 1024 909.5, 909.5 1024, 795 1024 H 229 C 114.5 1024, 0 909.5, 0 795 V 229 C 0 114.5, 114.5 0, 229 0 Z" fill="none" stroke="url(#edgeSpec)" stroke-width="8"></path>
+    </g>
+  </g>
+</svg>

@@ -8,6 +8,7 @@ final class ServerState {
     enum Status: Equatable {
         case starting
         case running
+        case homebrewNotFound
         case binaryNotFound
         case binaryInvalid(String)
         case startFailed(String)
@@ -16,6 +17,7 @@ final class ServerState {
     var status: Status = .starting
     var apfelVersion: String? = nil
     var isUpdateBannerDismissed = false
+    var hotKeyRegistrationMessage: String? = nil
 
     var isApfelOutdated: Bool {
         guard let version = apfelVersion else { return false }
@@ -33,7 +35,7 @@ final class ServerState {
             apfelVersion = await ApfelServerManager.shared.serverVersion
             status = .running
         } catch ApfelError.binaryNotFound {
-            status = .binaryNotFound
+            status = SetupChecker.isHomebrewInstalled() ? .binaryNotFound : .homebrewNotFound
         } catch ApfelError.binaryInvalid(let reason) {
             status = .binaryInvalid(reason)
         } catch {
