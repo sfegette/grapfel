@@ -10,6 +10,8 @@ private final class GrapfelPanel: NSPanel {
 }
 
 @MainActor class AppDelegate: NSObject, NSApplicationDelegate {
+    static weak var shared: AppDelegate?
+
     private var statusItem: NSStatusItem!
     private var panel: GrapfelPanel!
     private var hotKeyRef: EventHotKeyRef?
@@ -30,8 +32,12 @@ private final class GrapfelPanel: NSPanel {
     // itself (not any other outside click). togglePopover checks this to avoid immediately
     // re-opening the panel via the button's mouse-up action after the monitor already hid it.
     private var hiddenByOutsideClickAt: Date = .distantPast
+    private let hotKeyID = EventHotKeyID(signature: 0x4752504C /* GRPL */, id: 1)
+    private var currentHotKey: GlobalHotKey?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Self.shared = self
+        UserDefaults.standard.register(defaults: [UserDefaultsKey.apfelPermissive: true])
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: nil,
@@ -45,8 +51,13 @@ private final class GrapfelPanel: NSPanel {
 
     func applicationWillTerminate(_ notification: Notification) {
         if let handler = carbonEventHandler { RemoveEventHandler(handler) }
-        if let hotKey = hotKeyRef { UnregisterEventHotKey(hotKey) }
-        Task { await ApfelServerManager.shared.stop() }
+        unregisterGlobalHotKey()
+        let semaphore = DispatchSemaphore(value: 0)
+        Task.detached {
+            await ApfelServerManager.shared.stop()
+            semaphore.signal()
+        }
+        _ = semaphore.wait(timeout: .now() + 4)
     }
 
     // MARK: - Setup
@@ -54,7 +65,7 @@ private final class GrapfelPanel: NSPanel {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "grapfel")
+            button.image = NSImage(named: "StatusBarIcon")
             button.image?.isTemplate = true
             button.action = #selector(handleStatusItemClick)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -89,6 +100,25 @@ private final class GrapfelPanel: NSPanel {
     // Uses Carbon RegisterEventHotKey — no Input Monitoring permission required.
 
     private func setupGlobalHotKey() {
+        installCarbonEventHandler()
+        do {
+            let storedHotKey = GlobalHotKey.stored()
+            try activateGlobalHotKey(storedHotKey, persist: false)
+            ServerState.shared.hotKeyRegistrationMessage = nil
+        } catch {
+            do {
+                try activateGlobalHotKey(.default, persist: true)
+                ServerState.shared.hotKeyRegistrationMessage = "The saved global shortcut was unavailable, so grapfel restored the default \(GlobalHotKey.default.displayString)."
+            } catch {
+                currentHotKey = nil
+                hotKeyRef = nil
+                ServerState.shared.hotKeyRegistrationMessage = "grapfel could not register a global shortcut. Open Settings to choose a different key combination."
+            }
+        }
+    }
+
+    private func installCarbonEventHandler() {
+        guard carbonEventHandler == nil else { return }
         var eventSpec = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
@@ -104,9 +134,80 @@ private final class GrapfelPanel: NSPanel {
             },
             1, &eventSpec, selfPtr, &carbonEventHandler
         )
-        let hotKeyID = EventHotKeyID(signature: 0x4752504C /* GRPL */, id: 1)
-        RegisterEventHotKey(UInt32(kVK_Space), UInt32(cmdKey | shiftKey),
-                            hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
+    }
+
+    func applyGlobalHotKey(_ hotKey: GlobalHotKey) throws {
+        let previousHotKey = currentHotKey ?? GlobalHotKey.stored()
+        if hotKey == previousHotKey {
+            return
+        }
+
+        do {
+            try activateGlobalHotKey(hotKey, persist: true)
+            ServerState.shared.hotKeyRegistrationMessage = nil
+        } catch {
+            if currentHotKey != previousHotKey {
+                do {
+                    try activateGlobalHotKey(previousHotKey, persist: false)
+                } catch {
+                    currentHotKey = nil
+                    hotKeyRef = nil
+                    ServerState.shared.hotKeyRegistrationMessage = "grapfel lost its global shortcut after a registration failure. Reopen Settings and choose a different key combination."
+                    throw GlobalHotKeyError.registrationFailed(OSStatus(eventHotKeyExistsErr))
+                }
+            }
+            throw error
+        }
+    }
+
+    private func activateGlobalHotKey(_ hotKey: GlobalHotKey, persist: Bool) throws {
+        guard hotKey.carbonModifiers != 0 else {
+            throw GlobalHotKeyError.missingModifier
+        }
+        guard !GlobalHotKey.isModifierKey(UInt16(hotKey.keyCode)) else {
+            throw GlobalHotKeyError.modifierOnly
+        }
+
+        let newHotKeyRef = try registerGlobalHotKey(hotKey)
+        let previousRef = hotKeyRef
+        hotKeyRef = newHotKeyRef
+        currentHotKey = hotKey
+
+        if let previousRef, previousRef != newHotKeyRef {
+            _ = UnregisterEventHotKey(previousRef)
+        }
+
+        if persist {
+            hotKey.persist()
+        }
+    }
+
+    private func registerGlobalHotKey(_ hotKey: GlobalHotKey) throws -> EventHotKeyRef {
+        var registeredHotKeyRef: EventHotKeyRef?
+        let status = RegisterEventHotKey(
+            hotKey.keyCode,
+            hotKey.carbonModifiers,
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &registeredHotKeyRef
+        )
+
+        guard status == noErr, let registeredHotKeyRef else {
+            if status == eventHotKeyExistsErr {
+                throw GlobalHotKeyError.alreadyInUse
+            }
+            throw GlobalHotKeyError.registrationFailed(status)
+        }
+        return registeredHotKeyRef
+    }
+
+    private func unregisterGlobalHotKey() {
+        if let hotKeyRef {
+            _ = UnregisterEventHotKey(hotKeyRef)
+            self.hotKeyRef = nil
+        }
+        currentHotKey = nil
     }
 
     // MARK: - Actions
@@ -201,6 +302,7 @@ private final class GrapfelPanel: NSPanel {
             }
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.panel.isVisible else { return }
+                guard NSApp.modalWindow == nil else { return }
                 if onStatusBar { self.hiddenByOutsideClickAt = Date() }
                 self.hidePanel()
             }
@@ -215,7 +317,7 @@ private final class GrapfelPanel: NSPanel {
     private func activateAppForPanelPresentation() {
         // LSUIElement release builds launched from Finder/open can leave the panel
         // non-interactive if this is simplified to plain NSApp.activate().
-        NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)
+        NSApp.activate()
     }
 
     private func removeOutsideClickMonitor() {

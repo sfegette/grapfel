@@ -36,6 +36,29 @@ final class MockApfelAPIClient: @unchecked Sendable, ApfelAPIClientProtocol {
     }
 }
 
+final class ControlledStreamApfelAPIClient: @unchecked Sendable, ApfelAPIClientProtocol {
+    private(set) var capturedMessages: [ChatMessage] = []
+    private(set) var capturedOptions: ApfelOptions?
+    var continuation: AsyncThrowingStream<StreamEvent, Error>.Continuation?
+    var onStreamStarted: (() -> Void)?
+
+    func complete(messages: [ChatMessage], options: ApfelOptions) async throws -> CompletionResult {
+        capturedMessages = messages
+        capturedOptions = options
+        return CompletionResult(content: "", finishReason: .stop, refusal: nil, usage: nil)
+    }
+
+    func stream(messages: [ChatMessage], options: ApfelOptions) -> AsyncThrowingStream<StreamEvent, Error> {
+        capturedMessages = messages
+        capturedOptions = options
+
+        return AsyncThrowingStream { continuation in
+            self.continuation = continuation
+            self.onStreamStarted?()
+        }
+    }
+}
+
 final class MockURLProtocol: URLProtocol {
     nonisolated(unsafe) static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
 

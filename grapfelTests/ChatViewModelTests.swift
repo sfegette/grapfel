@@ -181,4 +181,112 @@ final class ChatViewModelTests: XCTestCase {
         XCTAssertEqual(vm.lastUsage, UsageInfo(promptTokens: 3, completionTokens: 4, totalTokens: 7))
         XCTAssertNil(vm.responseAnnotation)
     }
+
+    @MainActor
+    func testStreamingCancellationPersistsPartialAssistantResponse() async {
+        let client = MockApfelAPIClient()
+        client.streamEvents = [.token("Partial")]
+        client.streamError = CancellationError()
+
+        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        vm.options.streaming = true
+        vm.prompt = "hello"
+
+        await vm.send()
+
+        XCTAssertEqual(vm.history.map(\.role), [.user, .assistant])
+        XCTAssertEqual(vm.history.map(\.content), ["hello", "Partial"])
+        XCTAssertFalse(vm.isLoading)
+        XCTAssertEqual(vm.streamingContent, "")
+
+        let reloaded = ChatViewModel(historyFileURL: historyFileURL)
+        XCTAssertEqual(reloaded.history.map(\.content), ["hello", "Partial"])
+    }
+
+    @MainActor
+    func testStreamingCancellationWithoutAssistantTokensRemovesPendingUserMessage() async {
+        let client = MockApfelAPIClient()
+        client.streamError = CancellationError()
+
+        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        vm.options.streaming = true
+        vm.prompt = "hello"
+
+        await vm.send()
+
+        XCTAssertTrue(vm.history.isEmpty)
+        XCTAssertFalse(vm.isLoading)
+        XCTAssertEqual(vm.streamingContent, "")
+
+        let reloaded = ChatViewModel(historyFileURL: historyFileURL)
+        XCTAssertTrue(reloaded.history.isEmpty)
+    }
+
+    @MainActor
+    func testSendErrorPersistsErrorConversationState() async {
+        let client = MockApfelAPIClient()
+        client.completeError = TestError.expectedFailure
+
+        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        vm.options.streaming = false
+        vm.prompt = "hello"
+
+        await vm.send()
+
+        let reloaded = ChatViewModel(historyFileURL: historyFileURL)
+        XCTAssertEqual(reloaded.history.map(\.content), ["hello", "Error: Expected failure"])
+    }
+
+    @MainActor
+    func testStreamingCancellationSavesBackToOriginalConversationAfterSwitch() async throws {
+        let directory = try makeTemporaryDirectory()
+        let defaults = makeTestUserDefaults()
+        defaults.set(RetentionMode.unlimited.rawValue, forKey: UserDefaultsKey.retentionMode)
+        let store = ConversationStore(directory: directory, userDefaults: defaults)
+
+        let first = ConversationRecord(
+            name: "First",
+            messages: [ChatMessage(role: .user, content: "Old one")]
+        )
+        let second = ConversationRecord(
+            name: "Second",
+            messages: [ChatMessage(role: .user, content: "Old two")]
+        )
+        store.save(first)
+        store.save(second)
+        store.activate(first.id)
+
+        let client = ControlledStreamApfelAPIClient()
+
+        let vm = ChatViewModel(apiClient: client, conversationStore: store)
+        vm.loadConversation(first)
+        vm.options.streaming = true
+        vm.prompt = "hello"
+
+        vm.beginSend()
+
+        while client.continuation == nil {
+            await Task.yield()
+        }
+
+        client.continuation?.yield(.token("Partial"))
+        while vm.streamingContent != "Partial" {
+            await Task.yield()
+        }
+
+        store.activate(second.id)
+        vm.loadConversation(second)
+        client.continuation?.finish(throwing: CancellationError())
+
+        while store.conversations.first(where: { $0.id == first.id })?.messages.count != 3 {
+            await Task.yield()
+        }
+
+        let firstRecord = try XCTUnwrap(store.conversations.first(where: { $0.id == first.id }))
+        let secondRecord = try XCTUnwrap(store.conversations.first(where: { $0.id == second.id }))
+
+        XCTAssertEqual(firstRecord.messages.map(\.content), ["Old one", "hello", "Partial"])
+        XCTAssertEqual(secondRecord.messages.map(\.content), ["Old two"])
+        XCTAssertEqual(vm.history.map(\.content), ["Old two"])
+    }
 }

@@ -10,6 +10,9 @@ actor ApfelServerManager {
     private let userDefaults: UserDefaults
     private let candidateBinaryURLs: [URL]
     private let fileExists: @Sendable (String) -> Bool
+    private let isExecutableFile: @Sendable (String) -> Bool
+    private let fileIsDirectory: @Sendable (String) -> Bool
+    private let fileTypeProvider: @Sendable (String) -> String?
     private let shellWhichCommand: @Sendable (String) -> String?
     private var intentionalStop = false
     private(set) var serverVersion: String? = nil
@@ -19,12 +22,22 @@ actor ApfelServerManager {
         userDefaults: UserDefaults = .standard,
         candidateBinaryURLs: [URL] = ApfelServerManager.defaultCandidateBinaryURLs(),
         fileExists: @escaping @Sendable (String) -> Bool = { FileManager.default.fileExists(atPath: $0) },
+        isExecutableFile: @escaping @Sendable (String) -> Bool = { FileManager.default.isExecutableFile(atPath: $0) },
+        fileIsDirectory: @escaping @Sendable (String) -> Bool = {
+            var isDirectory = ObjCBool(false)
+            FileManager.default.fileExists(atPath: $0, isDirectory: &isDirectory)
+            return isDirectory.boolValue
+        },
+        fileTypeProvider: @escaping @Sendable (String) -> String? = ApfelServerManager.defaultShellFileType(at:),
         shellWhichCommand: @escaping @Sendable (String) -> String? = ApfelServerManager.defaultShellWhich(_:)
     ) {
         self.session = session
         self.userDefaults = userDefaults
         self.candidateBinaryURLs = candidateBinaryURLs
         self.fileExists = fileExists
+        self.isExecutableFile = isExecutableFile
+        self.fileIsDirectory = fileIsDirectory
+        self.fileTypeProvider = fileTypeProvider
         self.shellWhichCommand = shellWhichCommand
     }
 
@@ -65,9 +78,9 @@ actor ApfelServerManager {
         guard await healthCheck() else {
             // Mark intentional so terminationHandler doesn't restart
             intentionalStop = true
+            p.terminationHandler = nil
             p.terminate()
             process = nil
-            intentionalStop = false  // reset for future start() calls
             throw ApfelError.serverStartFailed
         }
     }
@@ -97,9 +110,8 @@ actor ApfelServerManager {
         do {
             let (data, response) = try await session.data(from: url)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else { return false }
-            if let health = try? JSONDecoder().decode(HealthResponse.self, from: data) {
-                serverVersion = health.version
-            }
+            let health = try JSONDecoder().decode(HealthResponse.self, from: data)
+            serverVersion = health.version
             return true
         } catch {
             return false
@@ -169,24 +181,21 @@ actor ApfelServerManager {
     /// Throws `ApfelError.binaryInvalid` if the file exists but fails validation,
     /// or `ApfelError.binaryNotFound` if the file does not exist at all.
     func validateBinary(at url: URL) throws {
-        let fm = FileManager.default
         let path = url.path
-        guard fm.fileExists(atPath: path) else { throw ApfelError.binaryNotFound }
-        guard fm.isExecutableFile(atPath: path) else {
+        guard fileExists(path) else { throw ApfelError.binaryNotFound }
+        guard isExecutableFile(path) else {
             throw ApfelError.binaryInvalid("not executable: \(path)")
         }
-        var isDir: ObjCBool = false
-        fm.fileExists(atPath: path, isDirectory: &isDir)
-        if isDir.boolValue { throw ApfelError.binaryInvalid("path is a directory: \(path)") }
+        if fileIsDirectory(path) { throw ApfelError.binaryInvalid("path is a directory: \(path)") }
         // Best-effort Mach-O check — reject shell scripts named "apfel", allow Rosetta.
-        if let fileType = shellFileType(at: path) {
+        if let fileType = fileTypeProvider(path) {
             guard fileType.contains("Mach-O") || fileType.contains("executable") else {
                 throw ApfelError.binaryInvalid("not a Mach-O executable (\(fileType)): \(path)")
             }
         }
     }
 
-    private func shellFileType(at path: String) -> String? {
+    private static func defaultShellFileType(at path: String) -> String? {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/file")
         p.arguments = [path]

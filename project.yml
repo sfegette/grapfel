@@ -41,6 +41,7 @@ targets:
       - grapfel
     resources:
       - grapfel/Resources/Assets.xcassets
+      - grapfel/Resources/PrivacyInfo.xcprivacy
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.brilliantmindworks.grapfel
@@ -72,10 +73,14 @@ targets:
       - grapfelTests
       - grapfel/Models/ApfelOptions.swift
       - grapfel/Models/ChatMessage.swift
+      - grapfel/Models/GlobalHotKey.swift
       - grapfel/Models/MarkdownSegmenter.swift
       - grapfel/Services/ApfelAPIClient.swift
       - grapfel/Services/ApfelServerManager.swift
+      - grapfel/Services/ConversationExporter.swift
       - grapfel/Services/ConversationStore.swift
+      - grapfel/Services/ConversationTitleFormatter.swift
+      - grapfel/Services/SetupChecker.swift
       - grapfel/ViewModels/ChatViewModel.swift
     settings:
       base:
