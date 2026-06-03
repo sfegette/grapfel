@@ -97,7 +97,7 @@ actor ApfelServerManager {
         }
     }
 
-    private func handleCrash() async {
+    func handleCrash() async {
         guard !intentionalStop else { return }
         process = nil
         // Back off 1 s before restart to avoid tight restart loops

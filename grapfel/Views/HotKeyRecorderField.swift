@@ -113,6 +113,7 @@ final class HotKeyRecorderNSView: NSView {
         isRecording = false
         onValidationMessage?(nil)
         onCapture?(GlobalHotKey.from(keyCode: event.keyCode, modifiers: modifiers))
+        window?.makeFirstResponder(nil)
     }
 
     private func updateAppearance() {

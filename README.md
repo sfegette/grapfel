@@ -2,19 +2,21 @@
 
 A native macOS menubar app that puts Apple Intelligence at your fingertips — no API keys, no cloud, no Ollama. Powered entirely by on-device inference via [apfel](https://github.com/Arthur-Ficial/apfel).
 
-> **Requires macOS 26 Tahoe (beta) and Apple Silicon.** Apple Intelligence must be enabled on your device.
+> **Requires macOS 26 Tahoe and Apple Silicon.** Apple Intelligence must be enabled in System Settings.
 
 ---
 
 ## what it does
 
-grapfel sits in your menubar. Click the icon (or press **⌘⇧Space** from anywhere) to open a lightweight prompt window, type your request, hit **Enter** to send, and get a response from the on-device foundation model — instantly, privately, offline.
+grapfel sits in your menubar. Click the icon (or press **⌘⇧Space** from anywhere) to open a lightweight chat window, type your request, hit **Enter** to send, and get a response from the on-device foundation model — instantly, privately, offline.
 
 - **no API keys** — runs entirely on-device via Apple Intelligence
 - **no cloud** — your prompts never leave your Mac
 - **no Ollama** — uses Apple's own foundation model, not a third-party runtime
-- **fast** — apfel's server mode keeps the model loaded; responses start in ~1 second
-- **persistent conversations** — pick up exactly where you left off between sessions
+- **fast** — apfel keeps the model loaded; responses stream token-by-token in ~1 second
+- **persistent conversations** — full multi-conversation sidebar; pick up exactly where you left off
+- **auto-installs apfel** — grapfel detects missing dependencies and installs them for you on first launch
+- **configurable hotkey** — record any key combo in Settings; grapfel registers it globally via Carbon
 
 ---
 
@@ -22,10 +24,10 @@ grapfel sits in your menubar. Click the icon (or press **⌘⇧Space** from anyw
 
 | Requirement | Details |
 |---|---|
-| macOS | 26 Tahoe (beta) or later |
+| macOS | 26 Tahoe or later |
 | Hardware | Apple Silicon (M-series) |
-| Apple Intelligence | Must be enabled in System Settings |
-| [apfel](https://github.com/Arthur-Ficial/apfel) | v1.3.3+ — see install below |
+| Apple Intelligence | Must be enabled in System Settings → Apple Intelligence & Siri |
+| Homebrew | Required for apfel install (grapfel installs apfel automatically if Homebrew is present) |
 
 ---
 
@@ -33,56 +35,23 @@ grapfel sits in your menubar. Click the icon (or press **⌘⇧Space** from anyw
 
 Download the latest release from the [Releases page](https://github.com/sfegette/grapfel/releases).
 
-### install from zip
-
-1. Download the latest **grapfel-X.Y.Z-macos26.zip** from the Assets section of the release.
+1. Download **grapfel-1.0.0-macos26.zip** from the Assets section.
 2. Unzip and move `grapfel.app` to `/Applications`.
 3. Launch. The **✦** icon appears in your menubar.
 
-grapfel is signed with a Developer ID certificate and notarized by Apple — no Gatekeeper prompt, no quarantine step required.
+grapfel is signed with a Developer ID certificate and notarized by Apple — no Gatekeeper prompt, no quarantine step required. Future updates are delivered automatically via Sparkle.
 
 ---
 
-## install apfel
+## first launch
 
-grapfel requires `apfel` to be installed and available on your PATH.
+On first launch, grapfel checks whether `apfel` is installed:
 
-```bash
-brew install apfel
-```
+- **If apfel is present:** grapfel starts it immediately and you're ready to chat.
+- **If apfel is missing and Homebrew is installed:** grapfel installs apfel automatically — progress streams in real time right in the app window.
+- **If Homebrew is not installed:** grapfel shows a setup screen with a link to brew.sh and a Retry button.
 
-> apfel is in homebrew-core as of v1.0.0. The tap (`brew tap Arthur-Ficial/tap`) is no longer required.
-
-Verify it works:
-
-```bash
-apfel "say hello"
-```
-
----
-
-## install grapfel
-
-grapfel can be installed from a pre-built zip (see [download](#download) above) or built from source.
-
-### build from source
-
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/sfegette/grapfel.git
-   cd grapfel
-   ```
-
-2. Open the project in Xcode 26:
-   ```bash
-   open grapfel.xcodeproj
-   ```
-
-3. Select your Mac as the run destination and press **⌘R**.
-
-The app will appear in your menubar as a ✦ icon.
-
-> **Note:** The global hotkey (⌘⇧Space) uses Carbon `RegisterEventHotKey` and does not require Input Monitoring permission.
+Once apfel is installed, grapfel manages its lifecycle: starts it on launch, health-checks it on startup, restarts it on crash, and terminates it cleanly on quit.
 
 ---
 
@@ -90,103 +59,110 @@ The app will appear in your menubar as a ✦ icon.
 
 | Action | How |
 |---|---|
-| Open / close | Click menubar icon, or press **⌘⇧Space** from anywhere |
+| Open / close | Click the ✦ menubar icon, or press **⌘⇧Space** from anywhere |
 | Send prompt | Press **Enter** |
 | Insert newline | Press **⌘+Enter** |
-| New conversation | Click the ✏ icon in the header (appears once a conversation is active) |
+| New conversation | Click the ✏ icon in the header |
+| Browse conversations | Click the ☰ icon to open the sidebar |
+| Rename conversation | Double-click a conversation name in the sidebar |
+| Delete conversation | Hover the conversation in the sidebar → click the trash icon |
 | Copy response | Click **Copy** at the bottom of any assistant message |
 | Copy as code block | Right-click **Copy** → "Copy as Code Block" |
 | Copy as plain text | Right-click **Copy** → "Copy as Plain Text" |
-| Attach file | Click the paperclip button |
-| Adjust options | Click the options disclosure group (temperature, max tokens, etc.) |
-| Preferences | Press **⌘,** or click the gear icon |
+| Export conversation | Sidebar → ··· menu → "Export as Markdown" |
+| Export all conversations | Sidebar → ··· menu → "Export all as JSON" |
+| Attach file | Click the paperclip button in the input area |
+| Adjust generation options | Click the options disclosure group (temperature, max tokens, etc.) |
+| Settings | Press **⌘,** or click the gear icon |
+| Change global hotkey | Settings → General → Global Shortcut → click to record |
+| Update apfel | Banner appears automatically when an update is available → click Upgrade |
+| Check for app updates | Right-click the ✦ menubar icon → "Check for Updates…" |
 
 ---
 
 ## conversations
 
-grapfel maintains full multi-turn conversation history. Each message you send includes the complete prior context so the model can refer back to earlier turns.
+grapfel has a full multi-conversation sidebar. Each conversation is stored as a secure JSON file in `~/Library/Application Support/grapfel/conversations/` (permissions: 0600 per file, 0700 on the directory).
 
-Conversation state is automatically saved to `~/Library/Application Support/grapfel/conversation.json` — when you reopen the window (or relaunch the app), your conversation is restored exactly as you left it.
+Conversations are auto-titled from the first message you send (trimmed to 40 characters at a word boundary). Switch between them instantly — the model gets the full context of whichever conversation is active.
 
-To start fresh, click the **✏** (compose) icon in the header. This clears the history and deletes the saved state.
+**Retention modes** (Settings → Storage):
 
----
-
-## copying responses
-
-Every assistant response has a **Copy** button at the bottom of its bubble. Tap to copy, or right-click for options:
-
-| Option | What you get |
+| Mode | Behavior |
 |---|---|
-| Copy (tap) | Raw text — preserves Markdown syntax |
-| Copy as Markdown | Same as above, explicitly labelled |
-| Copy as Code Block | Response wrapped in ` ```markdown ``` ` — useful for embedding in docs |
-| Copy as Plain Text | Markdown syntax stripped — clean text for pasting anywhere |
-
-A brief **Copied ✓** confirmation appears for 2 seconds after copying.
+| Session only | Nothing written to disk — conversations purge on quit |
+| Last 50 turns | Keeps the most recent 50 user+assistant pairs per conversation |
+| Unlimited | Retains all messages up to a 200-message cap |
 
 ---
 
 ## options
 
-The options panel exposes the main apfel generation parameters:
-
 | Option | Default | Notes |
 |---|---|---|
 | Temperature | 1.0 | Controls randomness (0.0–2.0) |
 | Max tokens | 2048 | Maximum response length |
-| Streaming | on | SSE streaming — token-by-token output as the model generates |
-| JSON mode | off | Requests structured JSON output (`response_format: json_object`) |
-| System prompt | — | Sets the system role message |
+| Streaming | on | Token-by-token output as the model generates |
+| JSON mode | off | Requests structured JSON output |
+| System prompt | — | Sets the system role message sent before every turn |
 
-Token usage (prompt / completion / total) is shown beneath each response.
+Token usage (prompt / completion / total) is shown beneath each assistant response.
 
-**Permissive mode** (disables content safety filtering) is a server-level setting — enable it in **Settings → General**. The server restarts automatically when toggled.
+**Permissive mode** (disables content safety filtering) is a server-level flag — enable it in **Settings → General**. The server restarts automatically when toggled.
 
 ---
 
 ## architecture
 
 ```
-grapfel (menubar app)
-  └── launches apfel --serve on port 11434
+grapfel (menubar app, LSUIElement)
+  └── spawns apfel --serve on port 11434
         └── wraps Apple's on-device foundation model
-              └── exposes OpenAI-compatible HTTP API at 127.0.0.1:11434/v1
+              └── exposes OpenAI-compatible HTTP at 127.0.0.1:11434/v1
 ```
 
-grapfel manages the `apfel --serve` process lifecycle: starts it on launch, health-checks it, restarts on crash, and terminates it cleanly on quit. All communication is over localhost — nothing touches the network.
-
 ```
-AppDelegate
-  ├── GrapfelPanel (NSPanel subclass — Liquid Glass, borderless, canBecomeKey)
-  ├── ApfelServerManager (actor — subprocess lifecycle)
-  ├── ServerState (@Observable — propagates .starting/.running/.binaryNotFound/.startFailed to UI)
-  └── Carbon hotkey (⌘⇧Space, no Input Monitoring permission required)
+AppDelegate (@MainActor)
+  ├── GrapfelPanel (NSPanel subclass, canBecomeKey=true, 621 pt wide)
+  │   └── NSHostingView → ContentView (direct contentView, not nested)
+  ├── Carbon RegisterEventHotKey — configurable, no Input Monitoring permission
+  ├── Outside-click monitor (NSEvent global) with activation-timing guards
+  └── Sparkle SPU updater
+
+ApfelServerManager (actor)       — subprocess lifecycle, health-check, crash-restart
+HomebrewInstaller                — brew detect, install apfel, upgrade apfel (streaming output)
+ServerState (@Observable @MainActor) — .starting/.running/.binaryNotFound/.homebrewNotFound/.startFailed
+
+ConversationStore (@Observable @MainActor)
+  ├── UUID-named JSON files, 0o600 permissions, 0o700 directory
+  ├── RetentionMode: .sessionOnly / .lastNTurns(50) / .unlimited(cap 200)
+  ├── Auto-title (ConversationTitleFormatter, 40-char word-boundary)
+  └── Legacy migration: single conversation.json → UUID-named files
 
 ChatViewModel (@Observable @MainActor)
-  ├── history: [ChatMessage]   — full conversation context
-  ├── send()                   — appends turns, calls API, saves to disk
-  └── clearHistory()           — resets state and deletes saved file
+  ├── displayedConversationID snapshot — prevents cross-conversation writes during streams
+  └── Streaming (SSE) enabled by default
 
-ConversationView
-  ├── MessageRow (user: right/.quaternary, assistant: left/purple tint)
-  ├── MarkdownContent (fenced code blocks + AttributedString inline markdown)
-  └── CopyButton (tap = raw markdown; context menu = code block / plain text)
+Views (SwiftUI)
+  └── ContentView → SidebarView, HeaderBar, ConversationView, PromptInputView, OptionsPanel
 ```
+
+All communication is over localhost — nothing touches the internet except Sparkle update checks (to GitHub Releases).
 
 ---
 
 ## updates
 
-grapfel uses [Sparkle](https://sparkle-project.org) for automatic updates. Right-click the **✦** menubar icon → **Check for Updates…** to check manually, or let it check in the background automatically.
+**grapfel** updates itself automatically via [Sparkle](https://sparkle-project.org). Right-click the ✦ menubar icon → **Check for Updates…** to check manually.
+
+**apfel** — when a newer version is available in Homebrew, grapfel shows an update banner. Click **Upgrade** to install the update in-app (no terminal required).
 
 ---
 
 ## known limitations
 
-- **Global hotkey is not yet configurable** — ⌘⇧Space is hardcoded; a settings UI is on the roadmap (#8).
-- **macOS 26 only** — Apple Intelligence and Liquid Glass APIs require the macOS 26 SDK.
+- **macOS 26 only** — Apple Intelligence and the Liquid Glass material require the macOS 26 SDK.
+- **Apple Silicon only** — Apple Intelligence is not available on Intel Macs.
 
 ---
 
@@ -195,27 +171,26 @@ grapfel uses [Sparkle](https://sparkle-project.org) for automatic updates. Right
 - [x] Menubar icon + panel (Liquid Glass, GrapfelPanel)
 - [x] apfel server lifecycle management (start, health-check, crash-restart)
 - [x] Prompt → response via OpenAI-compatible API
-- [x] Options panel (temperature, max tokens, system prompt, etc.)
+- [x] Options panel (temperature, max tokens, system prompt, streaming, JSON mode)
 - [x] Enter to send, ⌘+Enter for newline
-- [x] Global hotkey (⌘⇧Space, no Input Monitoring permission)
+- [x] Global hotkey — configurable in Settings, Carbon registration, no Input Monitoring permission
 - [x] Multi-turn conversation history with full context
-- [x] Conversation persistence (auto-save/restore across sessions)
-- [x] Markdown rendering (code blocks, bold, italic, inline code)
+- [x] Persistent multi-conversation sidebar (UUID-named JSON, 0600/0700 permissions)
+- [x] Conversation auto-title (first message, 40-char word-boundary)
+- [x] Conversation export (Markdown per conversation, JSON archive for all)
+- [x] Retention modes: session-only, last-50-turns, unlimited
+- [x] Markdown rendering (fenced code blocks, bold, italic, inline code)
 - [x] Copy response (raw, code block, plain text)
-- [x] App icon (interim generated; final hand-crafted artwork pending)
-- [x] Build output to `build/Release/grapfel.app` (Release config)
-- [x] Release zip published to GitHub Releases (v0.1.0)
-- [x] Error UI for binary-not-found / server-start-failed (first-launch onboarding)
-- [x] SSE streaming (enabled — apfel 1.3.3)
-- [x] Sparkle auto-update (v0.1.3)
-- [x] Developer ID signed + notarized (v0.1.3)
-- [x] apfel version check + upgrade nudge (v0.1.3)
-- [x] Token usage display (v0.1.3)
-- [x] JSON mode (v0.1.3)
-- [x] Permissive mode in Settings (v0.1.3)
-- [ ] Configurable hotkey in Settings (#8)
-- [ ] Full test suite (#10)
-- [ ] Final icon artwork (#9)
+- [x] SSE streaming (token-by-token output)
+- [x] Sparkle auto-update for grapfel
+- [x] Developer ID signed + notarized
+- [x] Token usage display
+- [x] JSON mode and permissive mode
+- [x] Auto-install apfel on first launch (in-app, streaming progress)
+- [x] In-app apfel update (brew upgrade, no terminal required)
+- [x] Privacy manifest (PrivacyInfo.xcprivacy) + in-product privacy disclosure
+- [x] Full test suite (52 tests, Swift 6 strict concurrency)
+- [x] App icon + menubar template glyph
 
 ---
 

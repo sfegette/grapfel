@@ -105,8 +105,13 @@ final class ConversationStore {
 
         do {
             let data = try encoder().encode(bounded)
-            try data.write(to: url, options: .atomic)
-            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+            // Write to a temp path, apply permissions, then atomically replace the target.
+            // This prevents a brief world-readable window at the final path (L1) and ensures
+            // in-memory state stays in sync even if setAttributes fails (M1).
+            let tempURL = url.deletingLastPathComponent().appendingPathComponent(UUID().uuidString)
+            try data.write(to: tempURL)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tempURL.path)
+            _ = try FileManager.default.replaceItemAt(url, withItemAt: tempURL)
             upsertInMemoryRecord(bounded)
         } catch {
             return

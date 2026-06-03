@@ -289,4 +289,41 @@ final class ChatViewModelTests: XCTestCase {
         XCTAssertEqual(secondRecord.messages.map(\.content), ["Old two"])
         XCTAssertEqual(vm.history.map(\.content), ["Old two"])
     }
+
+    // Gap 3: deleting the active conversation while a stream is in-flight must not
+    // leave a ghost record in the store once the stream settles.
+    @MainActor
+    func testDeleteActiveConversationWhileStreamInFlightLeavesNoGhostRecord() async throws {
+        let directory = try makeTemporaryDirectory()
+        let defaults = makeTestUserDefaults()
+        defaults.set(RetentionMode.unlimited.rawValue, forKey: UserDefaultsKey.retentionMode)
+        let store = ConversationStore(directory: directory, userDefaults: defaults)
+
+        let target = ConversationRecord(name: "Target", messages: [ChatMessage(role: .user, content: "hello")])
+        store.save(target)
+        store.activate(target.id)
+
+        let client = ControlledStreamApfelAPIClient()
+        let vm = ChatViewModel(apiClient: client, conversationStore: store)
+        vm.loadConversation(target)
+        vm.options.streaming = true
+        vm.prompt = "go"
+        vm.beginSend()
+
+        while client.continuation == nil { await Task.yield() }
+        client.continuation?.yield(.token("Hi"))
+        while vm.streamingContent != "Hi" { await Task.yield() }
+
+        // Delete the target conversation while the stream is in-flight.
+        store.delete(target)
+        XCTAssertNil(store.conversations.first(where: { $0.id == target.id }))
+
+        // Finish the stream and let the save attempt settle.
+        client.continuation?.finish(throwing: CancellationError())
+        for _ in 0..<50 { await Task.yield() }
+
+        // The deleted conversation must not reappear in the store.
+        XCTAssertNil(store.conversations.first(where: { $0.id == target.id }))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: store.fileURL(for: target.id).path))
+    }
 }

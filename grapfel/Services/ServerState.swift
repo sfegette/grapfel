@@ -16,6 +16,7 @@ final class ServerState {
 
     var status: Status = .starting
     var apfelVersion: String? = nil
+    var availableApfelVersion: String? = nil
     var isUpdateBannerDismissed = false
     var hotKeyRegistrationMessage: String? = nil
 
@@ -23,6 +24,13 @@ final class ServerState {
         guard let version = apfelVersion else { return false }
         return !ServerState.meetsMinimumVersion(version, minimum: "1.3.3")
     }
+
+    var isApfelUpdateAvailable: Bool {
+        guard let installed = apfelVersion, let available = availableApfelVersion else { return false }
+        return ServerState.meetsMinimumVersion(available, minimum: installed) && available != installed
+    }
+
+    var needsApfelUpdate: Bool { isApfelOutdated || isApfelUpdateAvailable }
 
     private init() {}
 
@@ -34,6 +42,7 @@ final class ServerState {
             try await ApfelServerManager.shared.start()
             apfelVersion = await ApfelServerManager.shared.serverVersion
             status = .running
+            availableApfelVersion = await HomebrewInstaller.latestAvailableVersion()
         } catch ApfelError.binaryNotFound {
             status = SetupChecker.isHomebrewInstalled() ? .binaryNotFound : .homebrewNotFound
         } catch ApfelError.binaryInvalid(let reason) {
@@ -49,6 +58,15 @@ final class ServerState {
         await ApfelServerManager.shared.stop()
         try? await Task.sleep(for: .milliseconds(200))
         await retry()
+    }
+
+    func upgradeApfel() async {
+        do {
+            try await HomebrewInstaller.upgrade { _ in }
+            await restart()
+        } catch {
+            // Upgrade failed — leave state unchanged so the banner stays visible.
+        }
     }
 
     // MARK: - Version comparison

@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="0.2.0"
+VERSION="1.0.0"
 ZIP_NAME="grapfel-${VERSION}-macos26.zip"
 BUILD_DIR="build"
 APP_PATH="${BUILD_DIR}/Build/Products/Release/grapfel.app"

@@ -91,11 +91,18 @@ struct ContentView: View {
                 }
                 Divider()
             }
-            if serverState.isApfelOutdated && !serverState.isUpdateBannerDismissed,
+            if serverState.needsApfelUpdate && !serverState.isUpdateBannerDismissed,
                let version = serverState.apfelVersion {
-                UpdateNudgeBanner(currentVersion: version) {
-                    serverState.isUpdateBannerDismissed = true
-                }
+                UpdateNudgeBanner(
+                    currentVersion: version,
+                    availableVersion: serverState.availableApfelVersion,
+                    onUpgrade: {
+                        await serverState.upgradeApfel()
+                    },
+                    onDismiss: {
+                        serverState.isUpdateBannerDismissed = true
+                    }
+                )
                 Divider()
             }
             ConversationView(
@@ -167,37 +174,50 @@ private struct HeaderBar: View {
 
 private struct UpdateNudgeBanner: View {
     let currentVersion: String
+    let availableVersion: String?
+    let onUpgrade: () async -> Void
     let onDismiss: () -> Void
-    @State private var isCopied = false
-
-    private let upgradeCommand = "brew upgrade apfel"
+    @State private var isUpgrading = false
 
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "arrow.up.circle.fill")
                 .font(.caption)
                 .foregroundStyle(.orange)
-            Text("apfel \(currentVersion) is outdated — run")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(upgradeCommand, forType: .string)
-                isCopied = true
-                Task { try? await Task.sleep(for: .seconds(2)); isCopied = false }
-            } label: {
-                Text(upgradeCommand)
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(isCopied ? .green : .secondary)
+            if isUpgrading {
+                ProgressView().controlSize(.mini)
+                Text("Upgrading apfel…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if let available = availableVersion {
+                Text("apfel \(currentVersion) → \(available) available")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("apfel \(currentVersion) is outdated")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .buttonStyle(.plain)
             Spacer()
-            Button(action: onDismiss) {
-                Image(systemName: "xmark")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+            if !isUpgrading {
+                Button("Upgrade") {
+                    isUpgrading = true
+                    Task {
+                        await onUpgrade()
+                        isUpgrading = false
+                    }
+                }
+                .font(.caption)
+                .buttonStyle(.plain)
+                .foregroundStyle(.orange)
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)

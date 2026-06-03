@@ -120,4 +120,73 @@ final class ConversationStoreRetentionTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: store.fileURL(for: first.id).path))
         XCTAssertFalse(FileManager.default.fileExists(atPath: store.fileURL(for: second.id).path))
     }
+
+    // Gap 1a: applyRetentionMode(.lastNTurns) caps messages in existing conversations.
+    @MainActor
+    func testApplyRetentionModeLastNTurnsCapsExistingMessages() throws {
+        let directory = try makeTemporaryDirectory()
+        let defaults = makeTestUserDefaults()
+        defaults.set(RetentionMode.unlimited.rawValue, forKey: UserDefaultsKey.retentionMode)
+
+        let store = ConversationStore(directory: directory, userDefaults: defaults)
+        let messages = (0..<(ConversationStore.maxTurns * 2 + 4)).map { i in
+            ChatMessage(role: i.isMultiple(of: 2) ? .user : .assistant, content: "msg\(i)")
+        }
+        let record = ConversationRecord(name: "Long", messages: messages)
+        store.save(record)
+
+        defaults.set(RetentionMode.lastNTurns.rawValue, forKey: UserDefaultsKey.retentionMode)
+        store.applyRetentionMode()
+
+        let saved = try XCTUnwrap(store.conversations.first(where: { $0.id == record.id }))
+        XCTAssertEqual(saved.messages.count, ConversationStore.maxTurns * 2)
+        XCTAssertEqual(saved.messages.first?.content, "msg4")
+    }
+
+    // Gap 1b: applyRetentionMode(.unlimited) re-saves with maxMessages cap.
+    @MainActor
+    func testApplyRetentionModeUnlimitedPreservesMessagesUpToCap() throws {
+        let directory = try makeTemporaryDirectory()
+        let defaults = makeTestUserDefaults()
+        defaults.set(RetentionMode.lastNTurns.rawValue, forKey: UserDefaultsKey.retentionMode)
+
+        let store = ConversationStore(directory: directory, userDefaults: defaults)
+        let messages = (0..<ConversationStore.maxTurns * 2).map { i in
+            ChatMessage(role: i.isMultiple(of: 2) ? .user : .assistant, content: "msg\(i)")
+        }
+        let record = ConversationRecord(name: "Capped", messages: messages)
+        store.save(record)
+
+        defaults.set(RetentionMode.unlimited.rawValue, forKey: UserDefaultsKey.retentionMode)
+        store.applyRetentionMode()
+
+        let saved = try XCTUnwrap(store.conversations.first(where: { $0.id == record.id }))
+        XCTAssertEqual(saved.messages.count, ConversationStore.maxTurns * 2)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: store.fileURL(for: record.id).path))
+    }
+
+    // Gap 2: in-memory state is always updated after a successful write, regardless of
+    // whether setAttributes succeeds. Regression test for the M1 fix.
+    @MainActor
+    func testSaveAlwaysUpdatesInMemoryStateAfterSuccessfulWrite() throws {
+        let directory = try makeTemporaryDirectory()
+        let defaults = makeTestUserDefaults()
+        defaults.set(RetentionMode.unlimited.rawValue, forKey: UserDefaultsKey.retentionMode)
+
+        let store = ConversationStore(directory: directory, userDefaults: defaults)
+        var record = ConversationRecord(name: "V1", messages: [ChatMessage(role: .user, content: "first")])
+        store.save(record)
+        XCTAssertEqual(store.conversations.first(where: { $0.id == record.id })?.messages.first?.content, "first")
+
+        record.messages = [ChatMessage(role: .user, content: "second")]
+        store.save(record)
+
+        // In-memory state must reflect the new content, even if setAttributes were to fail.
+        XCTAssertEqual(store.conversations.first(where: { $0.id == record.id })?.messages.first?.content, "second")
+
+        let data = try Data(contentsOf: store.fileURL(for: record.id))
+        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+        let persisted = try decoder.decode(ConversationRecord.self, from: data)
+        XCTAssertEqual(persisted.messages.first?.content, "second")
+    }
 }

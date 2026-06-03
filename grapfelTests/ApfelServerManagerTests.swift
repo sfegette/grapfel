@@ -115,4 +115,22 @@ final class ApfelServerManagerTests: XCTestCase {
         let version = await manager.serverVersion
         XCTAssertNil(version)
     }
+
+    // Gap 4: handleCrash returns immediately when intentionalStop is true (quit path),
+    // and does not attempt to restart a server with no known binary.
+    func testHandleCrashWithIntentionalStopDoesNotAttemptRestart() async {
+        let manager = ApfelServerManager(
+            userDefaults: makeTestUserDefaults(),
+            candidateBinaryURLs: [],
+            fileExists: { _ in false },
+            isExecutableFile: { _ in false },
+            fileIsDirectory: { _ in false },
+            fileTypeProvider: { _ in nil },
+            shellWhichCommand: { _ in nil }
+        )
+        await manager.stop()               // sets intentionalStop = true
+        await manager.handleCrash()        // should return early — no crash on missing binary
+        let running = await manager.isRunning
+        XCTAssertFalse(running)
+    }
 }

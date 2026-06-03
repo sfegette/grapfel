@@ -52,6 +52,9 @@ private final class GrapfelPanel: NSPanel {
     func applicationWillTerminate(_ notification: Notification) {
         if let handler = carbonEventHandler { RemoveEventHandler(handler) }
         unregisterGlobalHotKey()
+        // Known timing edge: if apfel crashes exactly at quit time, handleCrash (1 s sleep) +
+        // start (500 ms + health) + killProcessOnPort (up to 3 s) ≈ 4.7 s > 4 s limit.
+        // Probability is very low; if it fires, the OS reclaims apfel with no data loss.
         let semaphore = DispatchSemaphore(value: 0)
         Task.detached {
             await ApfelServerManager.shared.stop()
@@ -146,16 +149,8 @@ private final class GrapfelPanel: NSPanel {
             try activateGlobalHotKey(hotKey, persist: true)
             ServerState.shared.hotKeyRegistrationMessage = nil
         } catch {
-            if currentHotKey != previousHotKey {
-                do {
-                    try activateGlobalHotKey(previousHotKey, persist: false)
-                } catch {
-                    currentHotKey = nil
-                    hotKeyRef = nil
-                    ServerState.shared.hotKeyRegistrationMessage = "grapfel lost its global shortcut after a registration failure. Reopen Settings and choose a different key combination."
-                    throw GlobalHotKeyError.registrationFailed(OSStatus(eventHotKeyExistsErr))
-                }
-            }
+            // activateGlobalHotKey only mutates currentHotKey on success, so the previous
+            // hotkey registration is still active — no rollback step is needed.
             throw error
         }
     }
