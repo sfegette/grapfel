@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run — skips release.sh, just tests runner is alive'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release ${{ github.ref_name }}
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and release
+        run: |
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            echo "Dry run — skipping release.sh"
+          else
+            bash scripts/release.sh
+          fi

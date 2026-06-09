@@ -10,7 +10,7 @@ permissions:
 jobs:
   track:
     name: Report release ${{ github.event.release.tag_name }} to tracker
-    runs-on: [self-hosted, macOS]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
@@ -44,7 +44,7 @@ jobs:
               'artifact_url': os.environ['ARTIFACT_URL'],
           }))
           ")
-          curl -sf -X POST "http://m4mini.tailbaeb43.ts.net:8090/api/builds.php?token=${TRACKER_TOKEN}" \
+          curl -sf -X POST "https://tracker.scottfegette.com/api/builds.php?token=${TRACKER_TOKEN}" \
             -H 'Content-Type: application/json' \
             -d "$PAYLOAD" \
             || echo "::warning::Tracker insert failed (non-fatal)"
@@ -64,7 +64,7 @@ jobs:
               'duration_seconds': 0,
           }))
           ")
-          curl -sf -X POST "http://m4mini.tailbaeb43.ts.net:8090/api/builds.php?token=${TRACKER_TOKEN}" \
+          curl -sf -X POST "https://tracker.scottfegette.com/api/builds.php?token=${TRACKER_TOKEN}" \
             -H 'Content-Type: application/json' \
             -d "$PAYLOAD" \
             || echo "::warning::Tracker update failed (non-fatal)"
