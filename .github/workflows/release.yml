@@ -27,10 +27,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Unlock keychain
+        env:
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" ~/Library/Keychains/login.keychain-db
+          security set-keychain-settings -t 3600 ~/Library/Keychains/login.keychain-db
+
+      - name: Install xcpretty
+        run: gem list xcpretty -i &>/dev/null || gem install xcpretty --no-document 2>/dev/null || true
+
       - name: Build and release
+        env:
+          TRACKER_API_TOKEN: ${{ secrets.TRACKER_API_TOKEN }}
         run: |
           if [[ "${{ inputs.dry_run }}" == "true" ]]; then
             echo "Dry run — skipping release.sh"
           else
-            bash scripts/release.sh
+            bash scripts/release.sh --no-tag
           fi
