@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # release.sh — build, sign, notarize, staple, zip, update appcast, tag, and publish grapfel
-# Usage: bash Scripts/release.sh  (run from repo root)
+#
+# Usage:
+#   bash Scripts/release.sh               — full release (build, notarize, appcast, tag, GitHub)
+#   bash Scripts/release.sh --no-tag      — same but skip git tag + push (used by CI)
+#   bash Scripts/release.sh --local-test  — dev-signed build only; no notarization, appcast, or publish
 #
 # One-time setup:
 #   1. Download Sparkle release package, copy sign_update + generate_keys to /usr/local/bin/
@@ -11,7 +15,10 @@
 
 set -euo pipefail
 
-VERSION="1.0.0"
+VERSION=$(xcodebuild -project grapfel.xcodeproj -scheme grapfel \
+  -showBuildSettings 2>/dev/null | awk '/MARKETING_VERSION/{print $3; exit}')
+VERSION=${VERSION:-1.0.0}
+
 ZIP_NAME="grapfel-${VERSION}-macos26.zip"
 BUILD_DIR="build"
 APP_PATH="${BUILD_DIR}/Build/Products/Release/grapfel.app"
@@ -20,6 +27,119 @@ APPCAST="docs/appcast.xml"
 RELEASE_URL="https://github.com/sfegette/grapfel/releases/download/v${VERSION}/${ZIP_NAME}"
 PUB_DATE=$(date -R)
 NOTARIZE_PROFILE="grapfel-notarize"
+
+DO_TAG=true
+DO_LOCAL_TEST=false
+for arg in "$@"; do
+  case "$arg" in
+    --no-tag)     DO_TAG=false ;;
+    --local-test) DO_LOCAL_TEST=true; DO_TAG=false ;;
+  esac
+done
+
+# ── Build tracker self-reporting ─────────────────────────────────────────────
+# Reports release start/success/failure to the build tracker.
+# Enable by exporting TRACKER_API_TOKEN; unset = silently skipped.
+TRACKER_API_URL="${TRACKER_API_URL:-https://tracker.scottfegette.com/api/builds.php}"
+TRACKER_DEPLOY_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
+TRACKER_STARTED_TS=0
+tracker_started=false
+tracker_final=false
+
+tracker_post() {
+  [ -n "${TRACKER_API_TOKEN:-}" ] || return 0
+  curl -sf -X POST "${TRACKER_API_URL}?token=${TRACKER_API_TOKEN}" \
+    -H 'Content-Type: application/json' -d "$1" >/dev/null \
+    || echo "⚠️  tracker report failed (non-fatal)"
+}
+
+tracker_report_started() {
+  if [ -z "${TRACKER_API_TOKEN:-}" ]; then
+    echo "ℹ️  TRACKER_API_TOKEN unset — skipping build-tracker reporting"
+    return 0
+  fi
+  TRACKER_STARTED_TS=$(date -u +%s)
+  local started_at sha branch
+  started_at=$(date -u '+%Y-%m-%d %H:%M:%S')
+  sha=$(git rev-parse HEAD 2>/dev/null || echo "")
+  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+  tracker_post "$(VERSION="$VERSION" SHA="$sha" BRANCH="$branch" \
+    DEPLOY_ID="$TRACKER_DEPLOY_ID" STARTED_AT="$started_at" python3 -c "
+import json, os
+print(json.dumps({
+    'repo_name':    'grapfel',
+    'build_type':   'release',
+    'version_tag':  'v' + os.environ['VERSION'],
+    'commit_hash':  os.environ['SHA'],
+    'branch':       os.environ['BRANCH'],
+    'deploy_id':    os.environ['DEPLOY_ID'],
+    'started_at':   os.environ['STARTED_AT'],
+    'status':       'started',
+    'triggered_by': 'release.sh',
+}))")"
+  tracker_started=true
+  echo "▶ Build tracker: reported start (deploy_id ${TRACKER_DEPLOY_ID})"
+}
+
+tracker_report_success() {
+  $tracker_started || return 0
+  $tracker_final && return 0
+  local finished_at duration
+  finished_at=$(date -u '+%Y-%m-%d %H:%M:%S')
+  duration=$(( $(date -u +%s) - TRACKER_STARTED_TS ))
+  tracker_post "$(VERSION="$VERSION" DEPLOY_ID="$TRACKER_DEPLOY_ID" \
+    FINISHED_AT="$finished_at" DURATION="$duration" python3 -c "
+import json, os
+print(json.dumps({
+    'deploy_id':        os.environ['DEPLOY_ID'],
+    'status':           'success',
+    'finished_at':      os.environ['FINISHED_AT'],
+    'duration_seconds': int(os.environ['DURATION']),
+    'artifact_url':     'https://github.com/sfegette/grapfel/releases/tag/v' + os.environ['VERSION'],
+}))")"
+  tracker_final=true
+  echo "✅ Build tracker: reported success"
+}
+
+tracker_report_failed() {
+  $tracker_started || return 0
+  $tracker_final && return 0
+  local finished_at duration
+  finished_at=$(date -u '+%Y-%m-%d %H:%M:%S')
+  duration=$(( $(date -u +%s) - TRACKER_STARTED_TS ))
+  tracker_post "$(DEPLOY_ID="$TRACKER_DEPLOY_ID" FINISHED_AT="$finished_at" \
+    DURATION="$duration" python3 -c "
+import json, os
+print(json.dumps({
+    'deploy_id':        os.environ['DEPLOY_ID'],
+    'status':           'failed',
+    'finished_at':      os.environ['FINISHED_AT'],
+    'duration_seconds': int(os.environ['DURATION']),
+}))")"
+  tracker_final=true
+  echo "✗ Build tracker: reported failure"
+}
+
+trap 'tracker_report_failed' ERR
+
+echo "▶ grapfel ${VERSION}"
+
+# ── Local test mode ──────────────────────────────────────────────────────────
+
+if $DO_LOCAL_TEST; then
+  echo "==> Local test build (dev-signed, no notarization)..."
+  xcodebuild build \
+    -project grapfel.xcodeproj \
+    -scheme grapfel \
+    -configuration Release \
+    -derivedDataPath "${BUILD_DIR}" \
+    -quiet
+  echo "✅ Local test build ready: ${APP_PATH}"
+  echo "   open '${APP_PATH}'"
+  exit 0
+fi
+
+tracker_report_started
 
 # ── Locate sign_update ───────────────────────────────────────────────────────
 
@@ -190,9 +310,11 @@ git push origin main
 
 # ── Tag + GitHub Release ─────────────────────────────────────────────────────
 
-echo "==> Tagging v${VERSION}..."
-git tag -a "v${VERSION}" -m "Release v${VERSION}"
-git push origin "v${VERSION}"
+if $DO_TAG; then
+  echo "==> Tagging v${VERSION}..."
+  git tag -a "v${VERSION}" -m "Release v${VERSION}"
+  git push origin "v${VERSION}"
+fi
 
 NOTES_FILE="${DIST_DIR}/release-notes.md"
 cat > "${NOTES_FILE}" <<RELEASE_NOTES
@@ -232,6 +354,8 @@ gh release create "v${VERSION}" \
   "${DIST_DIR}/${ZIP_NAME}" \
   --title "grapfel v${VERSION}" \
   --notes-file "${NOTES_FILE}"
+
+tracker_report_success
 
 echo ""
 echo "Released: https://github.com/sfegette/grapfel/releases/tag/v${VERSION}"
