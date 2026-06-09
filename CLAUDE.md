@@ -58,3 +58,35 @@ Views (SwiftUI)                   — ContentView → PromptInputView, ResponseV
 - Xcode 26 (Swift 6.0)
 - `apfel` v0.9.0+ installed via `brew tap Arthur-Ficial/tap && brew install apfel`
 - Apple Silicon with Apple Intelligence enabled in System Settings
+
+---
+
+## Agent Role
+
+**Role:** Apple platform leaf node (macOS menubar app)
+
+grapfel is a leaf node in the Brilliant Mindworks five-repo agent network.
+
+| | |
+|---|---|
+| **Hierarchy** | Leaf |
+| **Reports to** | Scott Fegette |
+| **Visibility** | Public repo — role-filter all cross-repo files |
+
+**Local subagents** (callable by peer agents via `agent-dispatch` label on this repo):
+
+| Subagent | Status | What it does |
+|---|---|---|
+| `format-release-notes` | stub | Format release notes from commits/changelog |
+| `report-pipeline-status` | ✅ live | Ping tracker with current build/pipeline state |
+
+**Incoming routes:** cross-repo requests from bmw-dev-stack  
+**Outgoing routes:** infra/backend work → sfegette/bmw-dev-stack; public pages → sfegette/brilliant-web
+
+**Role-filter rule (public repo):** Before writing anything to a cross-repo file, ask: "Would this be fine on a public GitHub page?" If no → route to bmw-dev-stack.
+
+**Canonical reference:** [Roles Manifest](https://github.com/sfegette/bmw-dev-stack/blob/main/docs/agent-roles-manifest.md)
+
+### HITL thresholds
+
+See [roles manifest](https://github.com/sfegette/bmw-dev-stack/blob/main/docs/agent-roles-manifest.md#hitl-thresholds). Key rules: open PR → HITL; merge PR → always HITL; push release/tag → always HITL; file issues / ping tracker → autonomous.

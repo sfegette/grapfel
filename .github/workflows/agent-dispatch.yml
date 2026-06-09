@@ -1,0 +1,69 @@
+name: Agent Dispatch
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  dispatch:
+    if: github.event.label.name == 'agent-dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Run subagent
+        uses: actions/github-script@v7
+        env:
+          TRACKER_API_TOKEN: ${{ secrets.TRACKER_API_TOKEN }}
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const match = body.match(/^subagent:\s*(\S+)/m);
+            const subagent = match ? match[1].trim() : null;
+
+            if (!subagent) {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: context.issue.number,
+                body: '### ⚠️ Agent Dispatch Error\n\nMissing `subagent:` field.\n\n**Expected format:**\n```\nsubagent: <name>\ncaller: <repo>/<issue>\n```\n\nValid subagents: `format-release-notes`, `report-pipeline-status`'
+              });
+              return;
+            }
+
+            let result = `⚠️ Unknown subagent \`${subagent}\`. Valid: \`format-release-notes\`, \`report-pipeline-status\`\n\nSee [roles manifest](https://github.com/sfegette/bmw-dev-stack/blob/main/docs/agent-roles-manifest.md).`;
+
+            if (subagent === 'format-release-notes') {
+              result = `⚠️ \`format-release-notes\` not yet implemented. File a follow-up in ${context.repo.repo} to wire this up with the Claude Code API.`;
+            } else if (subagent === 'report-pipeline-status') {
+              const token = process.env.TRACKER_API_TOKEN;
+              if (!token) {
+                result = '⚠️ `TRACKER_API_TOKEN` secret not set — configure in repo Settings → Secrets and variables → Actions. See bmw-dev-stack for the token value.';
+              } else {
+                const callerMatch = body.match(/^caller:\s*(.+)/m);
+                const contextMatch = body.match(/^context:\s*(.+)/m);
+                try {
+                  const res = await fetch('https://tracker.scottfegette.com/api/ping', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      repo: context.repo.repo,
+                      event: 'pipeline-status',
+                      subagent: 'report-pipeline-status',
+                      issue: context.issue.number,
+                      caller: callerMatch ? callerMatch[1].trim() : 'unknown',
+                      context: contextMatch ? contextMatch[1].trim() : '',
+                      timestamp: new Date().toISOString()
+                    })
+                  });
+                  result = res.ok
+                    ? `✅ Pipeline status reported to tracker (HTTP ${res.status})`
+                    : `❌ Tracker returned HTTP ${res.status}: ${await res.text()}`;
+                } catch (e) {
+                  result = `❌ Tracker ping failed: ${e.message}`;
+                }
+              }
+            }
+
+            await github.rest.issues.createComment({
+              ...context.repo, issue_number: context.issue.number,
+              body: `### Agent Dispatch — \`${subagent}\`\n\n${result}\n\n---\n*[Roles Manifest](https://github.com/sfegette/bmw-dev-stack/blob/main/docs/agent-roles-manifest.md)*`
+            });
