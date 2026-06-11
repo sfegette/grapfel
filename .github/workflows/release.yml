@@ -13,12 +13,17 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   release:
     name: Release ${{ github.ref_name }}
     runs-on: [self-hosted, macOS]
     timeout-minutes: 30
+
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      raw_notes: ${{ steps.meta.outputs.raw_notes }}
 
     env:
       GH_TOKEN: ${{ github.token }}
@@ -47,25 +52,34 @@ jobs:
             bash scripts/release.sh --no-tag
           fi
 
-      # ── Dispatch to brilliant-web — fires update-app-page subagent ──────
-      - name: Dispatch app-page update to brilliant-web
-        if: inputs.dry_run != 'true' && success()
-        env:
-          BRILLIANT_WEB_PAT: ${{ secrets.BRILLIANT_WEB_PAT }}
+      - name: Extract release metadata
+        id: meta
+        if: inputs.dry_run != 'true'
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          CHANGELOG=$(git log --oneline "$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD" 2>/dev/null | grep -v "^[a-f0-9]* chore\|ci:\|docs:" | head -5 | sed 's/^[a-f0-9]* /- /' || echo "- bug fixes and improvements")
+          NOTES=$(git log --oneline \
+            "$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD" \
+            2>/dev/null \
+            | grep -vE "^[a-f0-9]+ (chore|ci:|docs:)" \
+            | head -10 \
+            | sed 's/^[a-f0-9]* //' \
+            || echo "bug fixes and improvements")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          {
+            echo "raw_notes<<NOTES_EOF"
+            echo "$NOTES"
+            echo "NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
 
-          ISSUE_BODY="subagent: update-app-page
-          caller: sfegette/grapfel#${GITHUB_RUN_ID}
-          app: grapfel
-          version: ${VERSION}
-          changelog: |-
-          $(echo "$CHANGELOG" | sed 's/^/  /')"
-
-          gh api repos/sfegette/brilliant-web/issues \
-            --method POST \
-            -H "Authorization: Bearer ${BRILLIANT_WEB_PAT}" \
-            -f title="agent-dispatch: grapfel v${VERSION} released" \
-            -f body="${ISSUE_BODY}" \
-            -f 'labels[]=agent-dispatch'
+  format-and-dispatch:
+    needs: release
+    if: >-
+      needs.release.result == 'success' &&
+      (github.event_name == 'push' || inputs.dry_run != 'true')
+    uses: ./.github/workflows/agent-dispatch.yml
+    with:
+      subagent: format-release-notes
+      app: grapfel
+      version: ${{ needs.release.outputs.version }}
+      raw_notes: ${{ needs.release.outputs.raw_notes }}
+    secrets: inherit
