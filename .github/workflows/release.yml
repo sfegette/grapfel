@@ -46,3 +46,26 @@ jobs:
           else
             bash scripts/release.sh --no-tag
           fi
+
+      # ── Dispatch to brilliant-web — fires update-app-page subagent ──────
+      - name: Dispatch app-page update to brilliant-web
+        if: inputs.dry_run != 'true' && success()
+        env:
+          BRILLIANT_WEB_PAT: ${{ secrets.BRILLIANT_WEB_PAT }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          CHANGELOG=$(git log --oneline "$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD" 2>/dev/null | grep -v "^[a-f0-9]* chore\|ci:\|docs:" | head -5 | sed 's/^[a-f0-9]* /- /' || echo "- bug fixes and improvements")
+
+          ISSUE_BODY="subagent: update-app-page
+          caller: sfegette/grapfel#${GITHUB_RUN_ID}
+          app: grapfel
+          version: ${VERSION}
+          changelog: |-
+          $(echo "$CHANGELOG" | sed 's/^/  /')"
+
+          gh api repos/sfegette/brilliant-web/issues \
+            --method POST \
+            -H "Authorization: Bearer ${BRILLIANT_WEB_PAT}" \
+            -f title="agent-dispatch: grapfel v${VERSION} released" \
+            -f body="${ISSUE_BODY}" \
+            -f 'labels[]=agent-dispatch'
