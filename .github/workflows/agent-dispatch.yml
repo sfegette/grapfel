@@ -3,10 +3,36 @@ name: Agent Dispatch
 on:
   issues:
     types: [labeled]
+  workflow_call:
+    inputs:
+      subagent:
+        required: true
+        type: string
+      app:
+        required: false
+        type: string
+        default: ''
+      version:
+        required: false
+        type: string
+        default: ''
+      raw_notes:
+        required: false
+        type: string
+        default: ''
+    secrets:
+      TRACKER_API_TOKEN:
+        required: false
+      ANTHROPIC_API_KEY:
+        required: false
+      BRILLIANT_WEB_PAT:
+        required: false
 
 jobs:
   dispatch:
-    if: github.event.label.name == 'agent-dispatch'
+    if: >
+      (github.event_name == 'issues' && github.event.label.name == 'agent-dispatch') ||
+      github.event_name == 'workflow_call'
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -15,55 +41,149 @@ jobs:
         uses: actions/github-script@v7
         env:
           TRACKER_API_TOKEN: ${{ secrets.TRACKER_API_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BRILLIANT_WEB_PAT: ${{ secrets.BRILLIANT_WEB_PAT }}
+          INPUT_SUBAGENT: ${{ inputs.subagent }}
+          INPUT_APP: ${{ inputs.app }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_RAW_NOTES: ${{ inputs.raw_notes }}
         with:
           script: |
-            const body = context.payload.issue.body || '';
-            const match = body.match(/^subagent:\s*(\S+)/m);
-            const subagent = match ? match[1].trim() : null;
+            const isWorkflowCall = context.eventName === 'workflow_call';
 
-            if (!subagent) {
-              await github.rest.issues.createComment({
-                ...context.repo, issue_number: context.issue.number,
-                body: '### ⚠️ Agent Dispatch Error\n\nMissing `subagent:` field.\n\n**Expected format:**\n```\nsubagent: <name>\ncaller: <repo>/<issue>\n```\n\nValid subagents: `format-release-notes`, `report-pipeline-status`'
-              });
-              return;
+            let subagent, app, version, rawNotes, issueNumber;
+
+            if (isWorkflowCall) {
+              subagent = process.env.INPUT_SUBAGENT;
+              app = process.env.INPUT_APP || 'grapfel';
+              version = process.env.INPUT_VERSION || '';
+              rawNotes = process.env.INPUT_RAW_NOTES || '';
+              issueNumber = null;
+            } else {
+              const body = context.payload.issue.body || '';
+              const subagentMatch = body.match(/^subagent:\s*(\S+)/m);
+              subagent = subagentMatch ? subagentMatch[1].trim() : null;
+              const appMatch = body.match(/^app:\s*(.+)/m);
+              const versionMatch = body.match(/^version:\s*(.+)/m);
+              const rawNotesMatch = body.match(/^raw-notes:\s*\|-?\n([\s\S]+?)(?=\n\S|$)/m);
+              app = appMatch ? appMatch[1].trim() : 'grapfel';
+              version = versionMatch ? versionMatch[1].trim() : '';
+              rawNotes = rawNotesMatch ? rawNotesMatch[1].replace(/^  /gm, '').trim() : '';
+              issueNumber = context.issue.number;
+
+              if (!subagent) {
+                await github.rest.issues.createComment({
+                  ...context.repo, issue_number: issueNumber,
+                  body: '### ⚠️ Agent Dispatch Error\n\nMissing `subagent:` field.\n\n**Expected format:**\n```\nsubagent: <name>\ncaller: <repo>/<issue>\n```\n\nValid subagents: `format-release-notes`, `report-pipeline-status`'
+                });
+                return;
+              }
             }
 
             let result = `⚠️ Unknown subagent \`${subagent}\`. Valid: \`format-release-notes\`, \`report-pipeline-status\`\n\nSee [roles manifest](https://github.com/sfegette/bmw-dev-stack/blob/main/docs/agent-roles-manifest.md).`;
 
             if (subagent === 'format-release-notes') {
-              result = `⚠️ \`format-release-notes\` not yet implemented. File a follow-up in ${context.repo.repo} to wire this up with the Claude Code API.`;
-            } else if (subagent === 'report-pipeline-status') {
-              const token = process.env.TRACKER_API_TOKEN;
-              if (!token) {
-                result = '⚠️ `TRACKER_API_TOKEN` secret not set — configure in repo Settings → Secrets and variables → Actions. See bmw-dev-stack for the token value.';
+              const apiKey = process.env.ANTHROPIC_API_KEY;
+              const brilliantWebPAT = process.env.BRILLIANT_WEB_PAT;
+
+              if (!apiKey) {
+                result = '⚠️ `ANTHROPIC_API_KEY` secret not set.';
+              } else if (!brilliantWebPAT) {
+                result = '⚠️ `BRILLIANT_WEB_PAT` secret not set.';
               } else {
-                const callerMatch = body.match(/^caller:\s*(.+)/m);
-                const contextMatch = body.match(/^context:\s*(.+)/m);
                 try {
-                  const res = await fetch('https://tracker.scottfegette.com/api/ping', {
+                  const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'x-api-key': apiKey,
+                      'anthropic-version': '2023-06-01'
+                    },
                     body: JSON.stringify({
-                      repo: context.repo.repo,
-                      event: 'pipeline-status',
-                      subagent: 'report-pipeline-status',
-                      issue: context.issue.number,
-                      caller: callerMatch ? callerMatch[1].trim() : 'unknown',
-                      context: contextMatch ? contextMatch[1].trim() : '',
-                      timestamp: new Date().toISOString()
+                      model: 'claude-haiku-4-5-20251001',
+                      max_tokens: 400,
+                      messages: [{
+                        role: 'user',
+                        content: `Write public-facing release notes for ${app} v${version}. Convert these raw commit messages into 3-5 concise bullet points a user would care about. Skip chores, CI fixes, version bumps, and internal tooling. Plain English, no jargon.\n\nRaw commits:\n${rawNotes}\n\nReturn only the bullet points.`
+                      }]
                     })
                   });
-                  result = res.ok
-                    ? `✅ Pipeline status reported to tracker (HTTP ${res.status})`
-                    : `❌ Tracker returned HTTP ${res.status}: ${await res.text()}`;
+
+                  if (!claudeRes.ok) {
+                    result = `❌ Claude API error: HTTP ${claudeRes.status}`;
+                  } else {
+                    const claudeData = await claudeRes.json();
+                    const formatted = claudeData.content[0].text.trim();
+
+                    const issueBody = [
+                      'subagent: update-app-page',
+                      `caller: sfegette/grapfel (format-release-notes)`,
+                      `app: ${app}`,
+                      `version: ${version}`,
+                      'changelog: |-',
+                      ...formatted.split('\n').map(l => '  ' + l)
+                    ].join('\n');
+
+                    const bwRes = await fetch('https://api.github.com/repos/sfegette/brilliant-web/issues', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${brilliantWebPAT}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github+json',
+                        'X-GitHub-Api-Version': '2022-11-28'
+                      },
+                      body: JSON.stringify({
+                        title: `agent-dispatch: ${app} v${version} released`,
+                        body: issueBody,
+                        labels: ['agent-dispatch']
+                      })
+                    });
+
+                    const bwData = bwRes.ok ? await bwRes.json() : null;
+                    result = bwData
+                      ? `✅ Formatted notes dispatched to brilliant-web (issue #${bwData.number})\n\n**Formatted:**\n${formatted}`
+                      : `❌ brilliant-web dispatch failed: HTTP ${bwRes.status}`;
+                  }
                 } catch (e) {
-                  result = `❌ Tracker ping failed: ${e.message}`;
+                  result = `❌ format-release-notes failed: ${e.message}`;
+                }
+              }
+            } else if (subagent === 'report-pipeline-status') {
+              if (isWorkflowCall) {
+                result = '⚠️ `report-pipeline-status` must be triggered via issue label, not workflow_call.';
+              } else {
+                const token = process.env.TRACKER_API_TOKEN;
+                const body = context.payload.issue.body || '';
+                if (!token) {
+                  result = '⚠️ `TRACKER_API_TOKEN` secret not set — configure in repo Settings → Secrets and variables → Actions. See bmw-dev-stack for the token value.';
+                } else {
+                  const callerMatch = body.match(/^caller:\s*(.+)/m);
+                  const contextMatch = body.match(/^context:\s*(.+)/m);
+                  try {
+                    const res = await fetch(`https://tracker.scottfegette.com/api/builds.php?token=${encodeURIComponent(token)}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        repo_name: context.repo.repo,
+                        build_type: 'agent-dispatch',
+                        status: contextMatch ? contextMatch[1].trim() : 'status-report',
+                        triggered_by: callerMatch ? callerMatch[1].trim() : 'agent-dispatch',
+                        branch: 'n/a'
+                      })
+                    });
+                    result = res.ok
+                      ? `✅ Pipeline status reported to tracker (HTTP ${res.status})`
+                      : `❌ Tracker returned HTTP ${res.status}: ${await res.text()}`;
+                  } catch (e) {
+                    result = `❌ Tracker ping failed: ${e.message}`;
+                  }
                 }
               }
             }
 
-            await github.rest.issues.createComment({
-              ...context.repo, issue_number: context.issue.number,
-              body: `### Agent Dispatch — \`${subagent}\`\n\n${result}\n\n---\n*[Roles Manifest](https://github.com/sfegette/bmw-dev-stack/blob/main/docs/agent-roles-manifest.md)*`
-            });
+            if (issueNumber !== null) {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: issueNumber,
+                body: `### Agent Dispatch — \`${subagent}\`\n\n${result}\n\n---\n*[Roles Manifest](https://github.com/sfegette/bmw-dev-stack/blob/main/docs/agent-roles-manifest.md)*`
+              });
+            }
