@@ -23,8 +23,6 @@ on:
     secrets:
       TRACKER_API_TOKEN:
         required: false
-      ANTHROPIC_API_KEY:
-        required: false
       BRILLIANT_WEB_PAT:
         required: false
 
@@ -41,7 +39,6 @@ jobs:
         uses: actions/github-script@v7
         env:
           TRACKER_API_TOKEN: ${{ secrets.TRACKER_API_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           BRILLIANT_WEB_PAT: ${{ secrets.BRILLIANT_WEB_PAT }}
           INPUT_SUBAGENT: ${{ inputs.subagent }}
           INPUT_APP: ${{ inputs.app }}
@@ -83,67 +80,50 @@ jobs:
             let result = `⚠️ Unknown subagent \`${subagent}\`. Valid: \`format-release-notes\`, \`report-pipeline-status\`\n\nSee [roles manifest](https://github.com/sfegette/bmw-dev-stack/blob/main/docs/agent-roles-manifest.md).`;
 
             if (subagent === 'format-release-notes') {
-              const apiKey = process.env.ANTHROPIC_API_KEY;
               const brilliantWebPAT = process.env.BRILLIANT_WEB_PAT;
 
-              if (!apiKey) {
-                result = '⚠️ `ANTHROPIC_API_KEY` secret not set.';
-              } else if (!brilliantWebPAT) {
+              if (!brilliantWebPAT) {
                 result = '⚠️ `BRILLIANT_WEB_PAT` secret not set.';
               } else {
                 try {
-                  const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+                  const bullets = (rawNotes || '')
+                    .split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l.length > 0)
+                    .map(l => l.replace(/^(feat|fix|perf|refactor|style|test|chore|ci|docs)(\([^)]*\))?:\s*/i, ''))
+                    .map(l => `- ${l.charAt(0).toUpperCase() + l.slice(1)}`)
+                    .join('\n');
+
+                  const formatted = bullets || `- Bug fixes and improvements for v${version}`;
+
+                  const issueBody = [
+                    'subagent: update-app-page',
+                    `caller: sfegette/grapfel (format-release-notes)`,
+                    `app: ${app}`,
+                    `version: ${version}`,
+                    'changelog: |-',
+                    ...formatted.split('\n').map(l => '  ' + l)
+                  ].join('\n');
+
+                  const bwRes = await fetch('https://api.github.com/repos/sfegette/brilliant-web/issues', {
                     method: 'POST',
                     headers: {
+                      'Authorization': `Bearer ${brilliantWebPAT}`,
                       'Content-Type': 'application/json',
-                      'x-api-key': apiKey,
-                      'anthropic-version': '2023-06-01'
+                      'Accept': 'application/vnd.github+json',
+                      'X-GitHub-Api-Version': '2022-11-28'
                     },
                     body: JSON.stringify({
-                      model: 'claude-haiku-4-5-20251001',
-                      max_tokens: 400,
-                      messages: [{
-                        role: 'user',
-                        content: `Write public-facing release notes for ${app} v${version}. Convert these raw commit messages into 3-5 concise bullet points a user would care about. Skip chores, CI fixes, version bumps, and internal tooling. Plain English, no jargon.\n\nRaw commits:\n${rawNotes}\n\nReturn only the bullet points.`
-                      }]
+                      title: `agent-dispatch: ${app} v${version} released`,
+                      body: issueBody,
+                      labels: ['agent-dispatch']
                     })
                   });
 
-                  if (!claudeRes.ok) {
-                    result = `❌ Claude API error: HTTP ${claudeRes.status}`;
-                  } else {
-                    const claudeData = await claudeRes.json();
-                    const formatted = claudeData.content[0].text.trim();
-
-                    const issueBody = [
-                      'subagent: update-app-page',
-                      `caller: sfegette/grapfel (format-release-notes)`,
-                      `app: ${app}`,
-                      `version: ${version}`,
-                      'changelog: |-',
-                      ...formatted.split('\n').map(l => '  ' + l)
-                    ].join('\n');
-
-                    const bwRes = await fetch('https://api.github.com/repos/sfegette/brilliant-web/issues', {
-                      method: 'POST',
-                      headers: {
-                        'Authorization': `Bearer ${brilliantWebPAT}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github+json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                      },
-                      body: JSON.stringify({
-                        title: `agent-dispatch: ${app} v${version} released`,
-                        body: issueBody,
-                        labels: ['agent-dispatch']
-                      })
-                    });
-
-                    const bwData = bwRes.ok ? await bwRes.json() : null;
-                    result = bwData
-                      ? `✅ Formatted notes dispatched to brilliant-web (issue #${bwData.number})\n\n**Formatted:**\n${formatted}`
-                      : `❌ brilliant-web dispatch failed: HTTP ${bwRes.status}`;
-                  }
+                  const bwData = bwRes.ok ? await bwRes.json() : null;
+                  result = bwData
+                    ? `✅ Notes dispatched to brilliant-web (issue #${bwData.number})\n\n**Formatted:**\n${formatted}`
+                    : `❌ brilliant-web dispatch failed: HTTP ${bwRes.status}`;
                 } catch (e) {
                   result = `❌ format-release-notes failed: ${e.message}`;
                 }
