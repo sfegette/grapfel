@@ -13,7 +13,16 @@ struct OptionsPanel: View {
                     value: $options.temperature,
                     range: 0...2,
                     step: 0.1,
-                    formatted: String(format: "%.1f", options.temperature)
+                    formatted: String(format: "%.2f", options.temperature)
+                )
+
+                // Top-p
+                LabeledSlider(
+                    label: "top p",
+                    value: $options.topP,
+                    range: 0.05...1,
+                    step: 0.05,
+                    formatted: String(format: "%.2f", options.topP)
                 )
 
                 // Max tokens

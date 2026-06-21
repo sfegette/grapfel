@@ -15,6 +15,7 @@ enum UserDefaultsKey {
 /// All generation options exposed to the user, mapped to apfel CLI flags / API fields.
 struct ApfelOptions: Equatable {
     var temperature: Double = 1.0       // --temperature
+    var topP: Double = 1.0              // top_p (nucleus sampling); 1.0 = disabled
     var maxTokens: Int = 2048           // --max-tokens
     var seed: Int? = nil                // --seed (nil = not set)
     var streaming: Bool = true           // --stream
