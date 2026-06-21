@@ -127,6 +127,7 @@ struct ApfelAPIClient: ApfelAPIClientProtocol {
             "model": "apple-foundationmodel",
             "messages": messages.map { ["role": $0.role.rawValue, "content": $0.content] },
             "temperature": options.temperature,
+            "top_p": options.topP,
             "max_tokens": options.maxTokens,
             "stream": stream,
             "x_context_strategy": options.contextStrategy.rawValue,
