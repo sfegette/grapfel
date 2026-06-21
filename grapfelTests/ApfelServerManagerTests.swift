@@ -82,6 +82,27 @@ final class ApfelServerManagerTests: XCTestCase {
         XCTAssertTrue(healthy)
         let version = await manager.serverVersion
         XCTAssertEqual(version, "0.9.1")
+        let prewarmed = await manager.isPrewarmed
+        XCTAssertFalse(prewarmed, "status 'ok' should not set isPrewarmed")
+    }
+
+    func testHealthCheckPrewarmedStatusSetsIsPrewarmed() async {
+        let session = makeMockSession()
+        MockURLProtocol.requestHandler = { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            let data = #"{"status":"prewarmed","version":"1.4.0"}"#.data(using: .utf8)!
+            return (response, data)
+        }
+
+        let manager = ApfelServerManager(session: session, userDefaults: makeTestUserDefaults())
+
+        let healthy = await manager.healthCheck()
+
+        XCTAssertTrue(healthy)
+        let prewarmed = await manager.isPrewarmed
+        XCTAssertTrue(prewarmed)
+        let version = await manager.serverVersion
+        XCTAssertEqual(version, "1.4.0")
     }
 
     func testHealthCheckFailureReturnsFalse() async {

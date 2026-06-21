@@ -16,6 +16,7 @@ actor ApfelServerManager {
     private let shellWhichCommand: @Sendable (String) -> String?
     private var intentionalStop = false
     private(set) var serverVersion: String? = nil
+    private(set) var isPrewarmed: Bool = false
 
     init(
         session: URLSession = .shared,
@@ -87,6 +88,7 @@ actor ApfelServerManager {
 
     func stop() async {
         intentionalStop = true
+        isPrewarmed = false
         if let p = process {
             // We spawned this process — terminate it directly.
             p.terminate()
@@ -112,6 +114,7 @@ actor ApfelServerManager {
             guard (response as? HTTPURLResponse)?.statusCode == 200 else { return false }
             let health = try JSONDecoder().decode(HealthResponse.self, from: data)
             serverVersion = health.version
+            isPrewarmed = health.status == "prewarmed"
             return true
         } catch {
             return false
