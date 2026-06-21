@@ -19,6 +19,7 @@ final class ServerState {
     var availableApfelVersion: String? = nil
     var isUpdateBannerDismissed = false
     var hotKeyRegistrationMessage: String? = nil
+    var isPrewarmed: Bool = false
 
     var isApfelOutdated: Bool {
         guard let version = apfelVersion else { return false }
@@ -38,11 +39,14 @@ final class ServerState {
 
     func retry() async {
         status = .starting
+        isPrewarmed = false
         do {
             try await ApfelServerManager.shared.start()
             apfelVersion = await ApfelServerManager.shared.serverVersion
+            isPrewarmed = await ApfelServerManager.shared.isPrewarmed
             status = .running
             availableApfelVersion = await HomebrewInstaller.latestAvailableVersion()
+            if !isPrewarmed { startPrewarmPoller() }
         } catch ApfelError.binaryNotFound {
             status = SetupChecker.isHomebrewInstalled() ? .binaryNotFound : .homebrewNotFound
         } catch ApfelError.binaryInvalid(let reason) {
@@ -54,10 +58,22 @@ final class ServerState {
 
     func restart() async {
         status = .starting
+        isPrewarmed = false
         isUpdateBannerDismissed = false
         await ApfelServerManager.shared.stop()
         try? await Task.sleep(for: .milliseconds(200))
         await retry()
+    }
+
+    private func startPrewarmPoller() {
+        Task { @MainActor [weak self] in
+            while let self, !self.isPrewarmed {
+                try? await Task.sleep(for: .milliseconds(750))
+                if await ApfelServerManager.shared.healthCheck() {
+                    self.isPrewarmed = await ApfelServerManager.shared.isPrewarmed
+                }
+            }
+        }
     }
 
     func upgradeApfel() async {

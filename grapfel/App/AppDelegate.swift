@@ -47,6 +47,7 @@ private final class GrapfelPanel: NSPanel {
         setupPanel()
         setupGlobalHotKey()
         Task { await ServerState.shared.retry() }
+        observePrewarmState()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -101,6 +102,22 @@ private final class GrapfelPanel: NSPanel {
 
     // MARK: - Global hot key (⌘⇧Space)
     // Uses Carbon RegisterEventHotKey — no Input Monitoring permission required.
+
+    private func observePrewarmState() {
+        Task { @MainActor [weak self] in
+            while true {
+                let isPrewarmed = ServerState.shared.isPrewarmed
+                self?.statusItem.button?.alphaValue = isPrewarmed ? 1.0 : 0.5
+                await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                    withObservationTracking {
+                        _ = ServerState.shared.isPrewarmed
+                    } onChange: {
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
 
     private func setupGlobalHotKey() {
         installCarbonEventHandler()
