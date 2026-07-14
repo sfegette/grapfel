@@ -22,9 +22,41 @@ build/
 *.o
 *.d
 
-# Environment
+# Local environment and credentials
 .env
-*.env.local
+.env.*
+!.env.example
+*.pem
+*.p12
+*.p8
+*.key
+*.mobileprovision
+*.provisionprofile
+
+# Local Xcode state (existing tracked copies must be removed from the index)
+*.xcuserstate
+*.xcuserdatad/
+
+# Private AI-assistant configuration and agent workflow material
+.claude/
+.codex/
+.cursor/
+.aider/
+.continue/
+.antigravitycli/
+.agents/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+Scripts/agent_*.sh
+docs/agent-*.md
+docs/review-brief.md
+adversarial_review*.md
+
+# Private release automation and its credentials live outside this public repo
+Scripts/release.sh
+.github/workflows/agent-dispatch.yml
+.github/workflows/release.yml
 
 # Release artifacts (created by Scripts/release.sh, never committed)
 dist/

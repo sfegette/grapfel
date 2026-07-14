@@ -3,16 +3,7 @@
   Sparkle appcast feed for grapfel.
   Hosted at: https://sfegette.github.io/grapfel/appcast.xml
 
-  One-time setup:
-  1. In your GitHub repo → Settings → Pages → Source: "Deploy from a branch"
-     Branch: main, Folder: /docs → Save.
-  2. Generate your EdDSA key pair (run once, from repo root):
-       ./path/to/Sparkle/bin/generate_keys
-     Or download Sparkle's release package and use the included generate_keys binary.
-     Store the private key in Keychain (generate_keys does this automatically).
-  3. Copy the printed public key into Info.plist → SUPublicEDKey.
-
-  Items are prepended here by Scripts/release.sh on each release.
+  This is the public update feed consumed by the app.
 -->
 <rss version="2.0"
      xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
