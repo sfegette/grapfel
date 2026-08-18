@@ -43,6 +43,28 @@ final class ConversationFeaturesTests: XCTestCase {
         XCTAssertTrue(markdown.contains("**grapfel:**\n\nHere is the changelog."))
     }
 
+    func testConversationExporterMarkdownPreservesBlockContent() {
+        let blockContent = """
+        ```swift
+        let greeting = \"hello\"
+        ```
+
+        - First item
+        - Second item
+
+        A final paragraph.
+        """
+        let record = ConversationRecord(
+            name: "Structured output",
+            messages: [ChatMessage(role: .assistant, content: blockContent)]
+        )
+
+        let markdown = ConversationExporter.markdown(for: record)
+
+        XCTAssertTrue(markdown.contains("**grapfel:**\n\n\(blockContent)"))
+        XCTAssertFalse(markdown.contains("**grapfel:** ```"))
+    }
+
     func testConversationExporterArchiveIncludesSchemaAndMessages() throws {
         let records = [
             ConversationRecord(
