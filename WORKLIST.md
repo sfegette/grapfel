@@ -1,7 +1,7 @@
 # Grapfel Worklist
 
-Last updated: 2026-05-22  
-Baseline: v0.1.5 released on `main`; `prep/release-readiness` is the current integration branch
+Last updated: 2026-08-19
+Baseline: v1.0.0 released on `main` (2026-06-03). The Foundation Models migration and the local persistence, coverage, and preset slices remain unreleased and require independent review; this is not a release-readiness or timing claim.
 
 ## Released
 
@@ -16,41 +16,61 @@ Baseline: v0.1.5 released on `main`; `prep/release-readiness` is the current int
 
 ---
 
-## Active — Open GitHub Issues
+## Active — Native Foundation Models migration
+
+- [ ] **Replace the apfel server dependency with Apple's Foundation Models framework**
+  The local `codex/foundation-models` slice calls `SystemLanguageModel` and `LanguageModelSession` directly, supports native streaming, maps availability and generation errors, and removes Homebrew/server lifecycle code. The generated project builds, 51 routine tests pass locally, and an opt-in live native-streaming smoke test passes on eligible hardware; independent review and manual app UI UAT remain.
+
+- [ ] **Keep model requests within the native context window**
+  The local slice retains the newest complete user/assistant turns, reserves a safety margin and minimum response budget, and automatically downshifts the response ceiling when input grows. Token totals use Apple's tokenizer on macOS 26.4 or later. Manual long-conversation and attachment UAT remains.
+
+- [ ] **Audit public privacy and setup copy after the runtime change**
+  The local slice removes localhost, Homebrew, installer, and apfel-update claims; documents direct on-device processing; and preserves the existing bundle ID, Application Support paths, signing configuration, and Sparkle feed for continuity. Review remains.
+
+## Active — Trust and data fidelity
 
 ### Bugs
 
-- [ ] **#22 — Known limitation: Apple Foundation Model refuses MCP tool-use for third-party service domains**  
-  Model-side limitation; no grapfel-side fix currently available.
+- [ ] **#67 — Align permissive-mode default, migration, and public disclosure**
+  Owner confirmed safety filtering as the default for new installs while preserving explicit saved preferences. The local implementation and regression coverage await independent review.
 
-- [ ] **#30 — Preserve block content in Markdown conversation exports**  
-  Exporter still prefixes message bodies with inline speaker labels, which can break fenced code blocks and lists.
+- [ ] **#65 — Report and recover from an atomic conversation-save failure**
+  The local slice cleans up a failed replacement temporary file, preserves the previously saved record, and shows a dismissal warning that the latest change may not survive quitting. Independent review remains.
 
-- [ ] **#35 — Correct PrivacyInfo.xcprivacy UserDefaults reason code**  
-  Privacy manifest and in-app disclosure exist, but the UserDefaults required-reason code still needs verification/correction.
+- [ ] **#66 — Persistent system-prompt presets with privacy controls**
+  The local slice adds role/rules/general preset management, owner-only local persistence, tests, and storage/deletion disclosure. Review requested; Settings/options-panel smoke test remains.
 
-### Enhancements
+### Reliability and maintenance
 
-_(none currently open)_
-
-### Design
-
-_(none currently open)_
-
----
+- [ ] **#50 — Fill the remaining test-coverage gaps**
+  The remaining relevant persistence, prompt-preset, model-request, generation-setting, and view-model gaps have local coverage. Obsolete server-lifecycle coverage was removed with the server runtime. Independent review remains.
 
 ## Backlog
 
-### Deferred (polish)
+- [ ] **Provider boundary for future model routing**
+  Keep `LanguageModelClientProtocol` narrow enough to add opt-in providers later without weakening the Apple-local default or coupling chat UI to transport details.
 
-- [ ] **H — Brew services detection verification**  
-  Verify `ApfelServerManager.start()` correctly handles `brew services start apfel` as a background daemon.  
-  _Files: ApfelServerManager.swift (smoke test / integration test)_
+- [ ] **Tool and MCP execution foundation**
+  Define explicit capabilities, consent, scopes, durable audit records, cancellation, and recovery before exposing file, repository, service, or scheduled actions. Do not treat raw model tool requests as authority.
+
+- [ ] **#22 — Model/tool-policy limitation research**
+  Re-evaluate tool-use behavior against the direct Foundation Models APIs before planning MCP execution. The former apfel/OpenAI-compatible path is no longer the relevant integration boundary.
+
+- [ ] **Retire obsolete apfel setup/update issues after migration review**
+  Close or supersede #44, #45, and the brew-services verification item once the direct Foundation Models migration is approved and released.
 
 ---
 
 ## Closed — All Versions
 
+- [x] **#35 — Correct PrivacyInfo.xcprivacy UserDefaults reason code** — `CA92.1` correction committed as `f95c415` after independent review; closed with manifest lint and test evidence (2026-08-18)
+- [x] **#30 — Preserve block content in Markdown conversation exports** — structured-export regression coverage committed as `1fc60b9` after independent review; closed with test evidence (2026-08-18)
+- [x] **#51 — Document the accepted crash/restart/stop timing risk** — timing caveat and no-data-loss rationale documented at the termination semaphore; closed with verification (2026-08-18)
+- [x] **#49 — Return focus after a successful hotkey capture** — recorder resigns first responder after capture, matching its Escape behavior; closed as already implemented (2026-08-18)
+- [x] **#48 — Remove the dead hotkey rollback branch** — dead rollback removed and the successful-registration invariant documented; closed as already implemented (2026-08-18)
+- [x] **#47 — Eliminate the conversation-file permission window** — Claude-reviewed temporary-file permission and atomic-replacement behavior; closed with evidence (2026-08-18)
+- [x] **#46 — Prevent conversation-save memory/disk desynchronization** — Claude-reviewed best-effort permission handling and persistence consistency; closed with evidence (2026-08-18)
+- [x] **#62 — Public-repository runner/workflow follow-up** — verified zero registered Actions runners, protection against force-pushes and branch deletion on `main`, and no current Actions workflows; closed with evidence (2026-08-18)
 - [x] **#7 — Error UI for binary not found / server start failed** — `SetupView` + `ServerState` singleton; AppDelegate propagates errors to UI state; Retry button re-attempts start (2026-05-01)
 - [x] **SSE streaming broken** — apfel 1.3.3 confirmed stable; `streaming` now defaults to `true`; `FinishReason` enum handles `length` and `content_filter` (2026-05-01)
 - [x] **Context strategy not sent to API** — `x_context_strategy` + `x_context_max_turns` now in every request body (2026-05-01)

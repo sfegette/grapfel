@@ -61,9 +61,10 @@ targets:
       - package: Sparkle
         product: Sparkle
     scheme:
+      # The retained UI-test target currently contains only a skipped placeholder. Keep it
+      # out of the normal test graph until it has a stable, non-placeholder test suite.
       testTargets:
         - grapfelTests
-        - grapfelUITests
 
   grapfelTests:
     type: bundle.unit-test
@@ -71,17 +72,15 @@ targets:
     deploymentTarget: "26.0"
     sources:
       - grapfelTests
-      - grapfel/Models/ApfelOptions.swift
+      - grapfel/Models/GenerationSettings.swift
       - grapfel/Models/ChatMessage.swift
       - grapfel/Models/GlobalHotKey.swift
       - grapfel/Models/MarkdownSegmenter.swift
-      - grapfel/Services/ApfelAPIClient.swift
-      - grapfel/Services/ApfelServerManager.swift
+      - grapfel/Models/SystemPromptPreset.swift
+      - grapfel/Services/FoundationModelClient.swift
       - grapfel/Services/ConversationExporter.swift
       - grapfel/Services/ConversationStore.swift
       - grapfel/Services/ConversationTitleFormatter.swift
-      - grapfel/Services/HomebrewInstaller.swift
-      - grapfel/Services/SetupChecker.swift
       - grapfel/ViewModels/ChatViewModel.swift
     settings:
       base:
@@ -103,14 +102,12 @@ schemes:
       targets:
         grapfel: all
         grapfelTests: [test]
-        grapfelUITests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
         - grapfelTests
-        - grapfelUITests
     profile:
       config: Release
     analyze:

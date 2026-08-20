@@ -8,7 +8,7 @@ private let expandBy: CGFloat = sidebarWidth + 1   // sidebar + divider
 struct ContentView: View {
     @State private var viewModel = ChatViewModel()
     @State private var sidebarVisible = false
-    private var serverState = ServerState.shared
+    private var modelState = ModelAvailabilityState.shared
     private var store = ConversationStore.shared
 
     var body: some View {
@@ -53,18 +53,12 @@ struct ContentView: View {
 
     @ViewBuilder
     private var mainContent: some View {
-        switch serverState.status {
-        case .starting:
+        switch modelState.status {
+        case .checking:
             startingView
-        case .homebrewNotFound:
-            SetupView(mode: .homebrewNotFound)
-        case .binaryNotFound:
-            SetupView(mode: .binaryNotFound)
-        case .binaryInvalid(let reason):
-            SetupView(mode: .binaryInvalid(reason))
-        case .startFailed(let message):
-            SetupView(mode: .startFailed(message))
-        case .running:
+        case .unavailable(let reason):
+            ModelUnavailableView(reason: reason)
+        case .available:
             chatView
         }
     }
@@ -72,7 +66,7 @@ struct ContentView: View {
     private var startingView: some View {
         VStack(spacing: 12) {
             ProgressView().controlSize(.large)
-            Text("Starting apfel…")
+            Text("Checking Apple Intelligence…")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -85,24 +79,16 @@ struct ContentView: View {
                 store.createAndActivate()
             }
             Divider()
-            if let hotKeyMessage = serverState.hotKeyRegistrationMessage {
+            if let hotKeyMessage = modelState.hotKeyRegistrationMessage {
                 HotKeyWarningBanner(message: hotKeyMessage) {
-                    serverState.hotKeyRegistrationMessage = nil
+                    modelState.hotKeyRegistrationMessage = nil
                 }
                 Divider()
             }
-            if serverState.needsApfelUpdate && !serverState.isUpdateBannerDismissed,
-               let version = serverState.apfelVersion {
-                UpdateNudgeBanner(
-                    currentVersion: version,
-                    availableVersion: serverState.availableApfelVersion,
-                    onUpgrade: {
-                        await serverState.upgradeApfel()
-                    },
-                    onDismiss: {
-                        serverState.isUpdateBannerDismissed = true
-                    }
-                )
+            if let persistenceErrorMessage = store.persistenceErrorMessage {
+                ConversationPersistenceWarningBanner(message: persistenceErrorMessage) {
+                    store.persistenceErrorMessage = nil
+                }
                 Divider()
             }
             ConversationView(
@@ -170,61 +156,6 @@ private struct HeaderBar: View {
     }
 }
 
-// MARK: - Update nudge banner
-
-private struct UpdateNudgeBanner: View {
-    let currentVersion: String
-    let availableVersion: String?
-    let onUpgrade: () async -> Void
-    let onDismiss: () -> Void
-    @State private var isUpgrading = false
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "arrow.up.circle.fill")
-                .font(.caption)
-                .foregroundStyle(.orange)
-            if isUpgrading {
-                ProgressView().controlSize(.mini)
-                Text("Upgrading apfel…")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else if let available = availableVersion {
-                Text("apfel \(currentVersion) → \(available) available")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("apfel \(currentVersion) is outdated")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            if !isUpgrading {
-                Button("Upgrade") {
-                    isUpgrading = true
-                    Task {
-                        await onUpgrade()
-                        isUpgrading = false
-                    }
-                }
-                .font(.caption)
-                .buttonStyle(.plain)
-                .foregroundStyle(.orange)
-
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 6)
-        .background(.orange.opacity(0.07))
-    }
-}
-
 private struct HotKeyWarningBanner: View {
     let message: String
     let onDismiss: () -> Void
@@ -248,6 +179,34 @@ private struct HotKeyWarningBanner: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
         .background(.orange.opacity(0.07))
+    }
+}
+
+private struct ConversationPersistenceWarningBanner: View {
+    let message: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "externaldrive.badge.exclamationmark")
+                .font(.caption)
+                .foregroundStyle(.orange)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Dismiss save warning")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .background(.orange.opacity(0.07))
+        .accessibilityElement(children: .combine)
     }
 }
 

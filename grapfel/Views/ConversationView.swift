@@ -30,7 +30,7 @@ struct ConversationView: View {
                                 .font(.caption)
                                 .foregroundStyle(.tertiary)
                                 .multilineTextAlignment(.center)
-                            Text("Prompts and attachments go only to your local apfel server on 127.0.0.1. Conversation storage stays on this Mac unless you export it.")
+                            Text("Prompts and attachments are processed through Apple's on-device Foundation Models framework. Conversation storage stays on this Mac unless you export it.")
                                 .font(.caption2)
                                 .foregroundStyle(.tertiary)
                                 .multilineTextAlignment(.center)

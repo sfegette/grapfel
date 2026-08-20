@@ -165,28 +165,78 @@ final class ConversationStoreRetentionTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: store.fileURL(for: record.id).path))
     }
 
-    // Gap 2: in-memory state is always updated after a successful write, regardless of
-    // whether setAttributes succeeds. Regression test for the M1 fix.
+    // Gap 2: in-memory state is always updated after a successful write, even if the
+    // best-effort temporary-file permission change fails. Regression test for the M1 fix.
     @MainActor
-    func testSaveAlwaysUpdatesInMemoryStateAfterSuccessfulWrite() throws {
+    func testSaveUpdatesInMemoryStateWhenTemporaryFilePermissionsFail() throws {
         let directory = try makeTemporaryDirectory()
         let defaults = makeTestUserDefaults()
         defaults.set(RetentionMode.unlimited.rawValue, forKey: UserDefaultsKey.retentionMode)
+        var shouldFailPermissionChange = false
 
-        let store = ConversationStore(directory: directory, userDefaults: defaults)
+        let store = ConversationStore(
+            directory: directory,
+            userDefaults: defaults,
+            setTemporaryFilePermissions: { url in
+                if shouldFailPermissionChange {
+                    throw TestError.expectedFailure
+                }
+                try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+            }
+        )
         var record = ConversationRecord(name: "V1", messages: [ChatMessage(role: .user, content: "first")])
         store.save(record)
         XCTAssertEqual(store.conversations.first(where: { $0.id == record.id })?.messages.first?.content, "first")
 
+        shouldFailPermissionChange = true
         record.messages = [ChatMessage(role: .user, content: "second")]
         store.save(record)
 
-        // In-memory state must reflect the new content, even if setAttributes were to fail.
+        // In-memory state must reflect the new content when the permission change fails.
         XCTAssertEqual(store.conversations.first(where: { $0.id == record.id })?.messages.first?.content, "second")
 
         let data = try Data(contentsOf: store.fileURL(for: record.id))
         let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
         let persisted = try decoder.decode(ConversationRecord.self, from: data)
         XCTAssertEqual(persisted.messages.first?.content, "second")
+    }
+
+    @MainActor
+    func testFailedReplacementCleansTemporaryFileAndShowsSaveWarning() throws {
+        let directory = try makeTemporaryDirectory()
+        let defaults = makeTestUserDefaults()
+        defaults.set(RetentionMode.unlimited.rawValue, forKey: UserDefaultsKey.retentionMode)
+        var shouldFailReplacement = false
+        let store = ConversationStore(
+            directory: directory,
+            userDefaults: defaults,
+            replaceItemAt: { destination, replacement in
+                if shouldFailReplacement {
+                    throw TestError.expectedFailure
+                }
+                return try FileManager.default.replaceItemAt(destination, withItemAt: replacement)
+            }
+        )
+        var record = ConversationRecord(
+            name: "Stable",
+            messages: [ChatMessage(role: .user, content: "Original")]
+        )
+        store.save(record)
+
+        shouldFailReplacement = true
+        record.messages = [ChatMessage(role: .user, content: "Updated")]
+        store.save(record)
+
+        XCTAssertEqual(store.conversations.first(where: { $0.id == record.id })?.messages.first?.content, "Original")
+        XCTAssertEqual(store.persistenceErrorMessage, ConversationStore.persistenceFailureMessage)
+
+        let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        XCTAssertTrue(files.allSatisfy { $0.pathExtension == "json" })
+
+        let data = try Data(contentsOf: store.fileURL(for: record.id))
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let persisted = try decoder.decode(ConversationRecord.self, from: data)
+        XCTAssertEqual(persisted.messages.first?.content, "Original")
     }
 }

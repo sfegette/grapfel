@@ -37,7 +37,7 @@ private final class GrapfelPanel: NSPanel {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Self.shared = self
-        UserDefaults.standard.register(defaults: [UserDefaultsKey.apfelPermissive: true])
+        PermissiveContentTransformationsPolicy.registerDefault()
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: nil,
@@ -46,22 +46,13 @@ private final class GrapfelPanel: NSPanel {
         setupStatusItem()
         setupPanel()
         setupGlobalHotKey()
-        Task { await ServerState.shared.retry() }
-        observePrewarmState()
+        ModelAvailabilityState.shared.refresh()
+        observeModelAvailability()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         if let handler = carbonEventHandler { RemoveEventHandler(handler) }
         unregisterGlobalHotKey()
-        // Known timing edge: if apfel crashes exactly at quit time, handleCrash (1 s sleep) +
-        // start (500 ms + health) + killProcessOnPort (up to 3 s) ≈ 4.7 s > 4 s limit.
-        // Probability is very low; if it fires, the OS reclaims apfel with no data loss.
-        let semaphore = DispatchSemaphore(value: 0)
-        Task.detached {
-            await ApfelServerManager.shared.stop()
-            semaphore.signal()
-        }
-        _ = semaphore.wait(timeout: .now() + 4)
     }
 
     // MARK: - Setup
@@ -103,14 +94,14 @@ private final class GrapfelPanel: NSPanel {
     // MARK: - Global hot key (⌘⇧Space)
     // Uses Carbon RegisterEventHotKey — no Input Monitoring permission required.
 
-    private func observePrewarmState() {
+    private func observeModelAvailability() {
         Task { @MainActor [weak self] in
             while true {
-                let isPrewarmed = ServerState.shared.isPrewarmed
-                self?.statusItem.button?.alphaValue = isPrewarmed ? 1.0 : 0.5
+                let isAvailable = ModelAvailabilityState.shared.isAvailable
+                self?.statusItem.button?.alphaValue = isAvailable ? 1.0 : 0.5
                 await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                     withObservationTracking {
-                        _ = ServerState.shared.isPrewarmed
+                        _ = ModelAvailabilityState.shared.isAvailable
                     } onChange: {
                         continuation.resume()
                     }
@@ -124,15 +115,15 @@ private final class GrapfelPanel: NSPanel {
         do {
             let storedHotKey = GlobalHotKey.stored()
             try activateGlobalHotKey(storedHotKey, persist: false)
-            ServerState.shared.hotKeyRegistrationMessage = nil
+            ModelAvailabilityState.shared.hotKeyRegistrationMessage = nil
         } catch {
             do {
                 try activateGlobalHotKey(.default, persist: true)
-                ServerState.shared.hotKeyRegistrationMessage = "The saved global shortcut was unavailable, so grapfel restored the default \(GlobalHotKey.default.displayString)."
+                ModelAvailabilityState.shared.hotKeyRegistrationMessage = "The saved global shortcut was unavailable, so grapfel restored the default \(GlobalHotKey.default.displayString)."
             } catch {
                 currentHotKey = nil
                 hotKeyRef = nil
-                ServerState.shared.hotKeyRegistrationMessage = "grapfel could not register a global shortcut. Open Settings to choose a different key combination."
+                ModelAvailabilityState.shared.hotKeyRegistrationMessage = "grapfel could not register a global shortcut. Open Settings to choose a different key combination."
             }
         }
     }
@@ -164,7 +155,7 @@ private final class GrapfelPanel: NSPanel {
 
         do {
             try activateGlobalHotKey(hotKey, persist: true)
-            ServerState.shared.hotKeyRegistrationMessage = nil
+            ModelAvailabilityState.shared.hotKeyRegistrationMessage = nil
         } catch {
             // activateGlobalHotKey only mutates currentHotKey on success, so the previous
             // hotkey registration is still active — no rollback step is needed.

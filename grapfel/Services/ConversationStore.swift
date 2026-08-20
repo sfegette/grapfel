@@ -43,13 +43,17 @@ final class ConversationStore {
     nonisolated static let maxMessages = 200
     /// Turn-pairs retained under `.lastNTurns` mode (1 turn = 1 user + 1 assistant message).
     nonisolated static let maxTurns = 50
+    nonisolated static let persistenceFailureMessage = "Couldn’t save this conversation. It remains open for this session, but your latest changes may be missing after you quit."
 
     private(set) var conversations: [ConversationRecord] = []
     private(set) var activeID: UUID?
+    var persistenceErrorMessage: String?
 
     private let directory: URL
     private let userDefaults: UserDefaults
     private let fallbackSupportDirectory: URL
+    private let replaceItemAt: (URL, URL) throws -> URL?
+    private let setTemporaryFilePermissions: (URL) throws -> Void
 
     var active: ConversationRecord? {
         conversations.first { $0.id == activeID }
@@ -60,8 +64,19 @@ final class ConversationStore {
         return RetentionMode(rawValue: rawValue) ?? .unlimited
     }
 
-    init(directory: URL? = nil, userDefaults: UserDefaults = .standard) {
+    init(
+        directory: URL? = nil,
+        userDefaults: UserDefaults = .standard,
+        replaceItemAt: @escaping (URL, URL) throws -> URL? = { destination, replacement in
+            try FileManager.default.replaceItemAt(destination, withItemAt: replacement)
+        },
+        setTemporaryFilePermissions: @escaping (URL) throws -> Void = { url in
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        }
+    ) {
         self.userDefaults = userDefaults
+        self.replaceItemAt = replaceItemAt
+        self.setTemporaryFilePermissions = setTemporaryFilePermissions
         self.fallbackSupportDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("grapfel", isDirectory: true)
         if let dir = directory {
@@ -100,20 +115,25 @@ final class ConversationStore {
         if currentRetentionMode == .sessionOnly {
             try? FileManager.default.removeItem(at: url)
             upsertInMemoryRecord(bounded)
+            persistenceErrorMessage = nil
             return
         }
 
+        let tempURL = url.deletingLastPathComponent().appendingPathComponent(UUID().uuidString)
         do {
             let data = try encoder().encode(bounded)
             // Write to a temp path, apply permissions, then atomically replace the target.
-            // This prevents a brief world-readable window at the final path (L1) and ensures
-            // in-memory state stays in sync even if setAttributes fails (M1).
-            let tempURL = url.deletingLastPathComponent().appendingPathComponent(UUID().uuidString)
+            // This prevents a brief world-readable window at the final path.
             try data.write(to: tempURL)
-            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tempURL.path)
-            _ = try FileManager.default.replaceItemAt(url, withItemAt: tempURL)
+            // Permissions are best-effort because a successful write/replacement still leaves
+            // the record consistent; failing them must not suppress the memory update.
+            try? setTemporaryFilePermissions(tempURL)
+            _ = try replaceItemAt(url, tempURL)
             upsertInMemoryRecord(bounded)
+            persistenceErrorMessage = nil
         } catch {
+            try? FileManager.default.removeItem(at: tempURL)
+            persistenceErrorMessage = Self.persistenceFailureMessage
             return
         }
     }
