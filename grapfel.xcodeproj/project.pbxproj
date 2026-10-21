@@ -7,35 +7,35 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		102253BFB6B80A6D7499B7AE /* ApfelAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B30B0A3BD58961475DEEC3A /* ApfelAPIClientTests.swift */; };
+		11C292DD737E2CFFFB28BAB5 /* FoundationModelIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 718A48401023AB900D40AEE0 /* FoundationModelIntegrationTests.swift */; };
+		18BBAE4C1B1D5DDB060CE34D /* FoundationModelClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC0A4E4B54C90BF4B7A02FB /* FoundationModelClient.swift */; };
 		1CAA954BE9C2799787584FBC /* HotKeyRecorderField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B271BA07F5AD7CA38A53F7B /* HotKeyRecorderField.swift */; };
 		1E3765258397415995235C0F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8827AE87C86AC8402972D3C1 /* AppDelegate.swift */; };
 		1EA3435E6DB7B94ED437B0A6 /* PromptInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */; };
 		2448E02EDA0F1FB5C8D44604 /* ConversationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D2BA4BB1AB70BAE99D1E76 /* ConversationStore.swift */; };
+		327565C5A51B16D991835224 /* GenerationSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3877A91D38A40AFE7F5F233 /* GenerationSettingsTests.swift */; };
 		33C485DAB3449A54225EA4AD /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C768033B74411C7B29EEC80 /* SidebarView.swift */; };
 		38B52BBFF5819F4F5954F122 /* MarkdownSegmenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C2942A1EC41854ABFECB704 /* MarkdownSegmenter.swift */; };
 		3AB69F15269E13BD70E3BE29 /* grapfel-icon-master.svg in Resources */ = {isa = PBXBuildFile; fileRef = CF01B5F456B39FEF134B4156 /* grapfel-icon-master.svg */; };
+		3E991A87A185DEA3F6F5F787 /* ModelUnavailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C6A21A3DC258824432E9065 /* ModelUnavailableView.swift */; };
 		4028CF7A6167EE7793FBD9A9 /* ConversationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D2BA4BB1AB70BAE99D1E76 /* ConversationStore.swift */; };
 		42D16E9AE1002A2FCB486151 /* ConversationFeaturesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AD23FD85460573F2639986 /* ConversationFeaturesTests.swift */; };
 		4361F030CD6064C409CF5EF3 /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E3127D7E44E8363FEE0F848 /* ConversationView.swift */; };
 		43B3076E0A6AF74881ED2C9B /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */; };
 		477C7C4E1326C7C4F9635ACA /* MarkdownSegmenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C2942A1EC41854ABFECB704 /* MarkdownSegmenter.swift */; };
-		4974608B6140C0D5D2742536 /* SetupCheckerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F07A321EB41688EFD0DB03C /* SetupCheckerTests.swift */; };
 		516A5EDD4D1E5791F67719CF /* ConversationStoreRetentionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D782EB2BD93FEC2673C342 /* ConversationStoreRetentionTests.swift */; };
 		518B5EABF4269570F2B1F890 /* GrapfelUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE3E4A9DDBF85AE24B2BD96 /* GrapfelUITests.swift */; };
 		579B1FC68F2A804A0EBF8F50 /* GlobalHotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270805843E27F2C1E268D6DF /* GlobalHotKey.swift */; };
 		57C4DDA1195B3B2409E1B197 /* ChatViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */; };
+		609BDD98712308314FEB13CB /* GenerationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C52289C1CF853245FBBCD91 /* GenerationSettings.swift */; };
 		6236D5D520C15B018FD0D2FF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C80960A75D8568616FF99F69 /* Sparkle */; };
 		641CCEB1992B68C6381FCF08 /* GlobalHotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270805843E27F2C1E268D6DF /* GlobalHotKey.swift */; };
 		6564BAD04BDA9E8379DEF5E1 /* GrapfelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3112960AEB63D0BC17D5FC70 /* GrapfelApp.swift */; };
-		69497D84D9CAF16AA160129B /* ApfelServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */; };
-		699A3136C12715AB6209ECB6 /* ApfelOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F736F3FB827065B3C4816602 /* ApfelOptions.swift */; };
 		6A7B63689AA43C2C6078CAD9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EAB64DD5E933F8A524749BB8 /* PrivacyInfo.xcprivacy */; };
-		6E24F3917283F8A2DD1C2C8E /* HomebrewInstallerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBAB2B8B8FBC38A2CFE4E4DD /* HomebrewInstallerTests.swift */; };
-		700C7C563A38F184FBC34180 /* HomebrewInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C2C539CD56D6FE5098C2E0 /* HomebrewInstaller.swift */; };
-		70B2BB5B3AEB14AAC9138B53 /* ApfelOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F736F3FB827065B3C4816602 /* ApfelOptions.swift */; };
+		71C98EABF725B97A4B2B2817 /* FoundationModelClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD055033BE32671A876451AA /* FoundationModelClientTests.swift */; };
 		74ECF0E1DAA2D8A21F6139F0 /* AppIcon-master.png in Resources */ = {isa = PBXBuildFile; fileRef = FD43659C91334DAF09CF30BF /* AppIcon-master.png */; };
 		7AE4ABFB8A4F126D5CFCBA81 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */; };
+		83730C58D4E28B9B413364EF /* FoundationModelClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC0A4E4B54C90BF4B7A02FB /* FoundationModelClient.swift */; };
 		84BDDDC25B80F04BC30F9C67 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08718FE68CCF160787C1F1BB /* Assets.xcassets */; };
 		89D92788254FDE53AA885A21 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */; };
 		90FA51057B8CDB80FDA14E63 /* ConversationExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A440FBBB3B277872C775101F /* ConversationExporter.swift */; };
@@ -43,22 +43,17 @@
 		98AE86ACBE853AD2BEF01B81 /* GlobalHotKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2352A04E0067FFE6726B44E4 /* GlobalHotKeyTests.swift */; };
 		99A0F09EC199EEAF2888B5EB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997EC77C475EF15B1182C5EE /* ContentView.swift */; };
 		9BCF25A9D8A22A08F138C614 /* ConversationExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A440FBBB3B277872C775101F /* ConversationExporter.swift */; };
-		AE12D604E5090BC6EF2A13C0 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FB9F98D5B16DE244FC6C14 /* SetupView.swift */; };
+		AACE34F34941985E9FD85D71 /* GenerationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C52289C1CF853245FBBCD91 /* GenerationSettings.swift */; };
 		BEE21DEE08C2FC5BEA0225DD /* MarkdownSegmenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA60815030FE14D7C8505FB8 /* MarkdownSegmenterTests.swift */; };
 		BF288E5D4FE9541DDB45B92B /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */; };
-		C4CE039D44D87DE693E31968 /* ApfelOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */; };
-		CD9575A8940A9D767B10191C /* ApfelAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */; };
+		C28268E5021A42630F42831E /* SystemPromptPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4A983CE08BB03903115A72 /* SystemPromptPreset.swift */; };
+		CE8D37FFF8B41BB9A0F14794 /* SystemPromptStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C0A8BF8B7D2EA5AC4A2126 /* SystemPromptStoreTests.swift */; };
+		CECD6329BC3836F8E000A36C /* SystemPromptPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4A983CE08BB03903115A72 /* SystemPromptPreset.swift */; };
 		D1B310E388D858D7FFEE5721 /* grapfel-statusbar-template.svg in Resources */ = {isa = PBXBuildFile; fileRef = 343C6D24A34C696D1F934AEF /* grapfel-statusbar-template.svg */; };
-		D9913C86D788066289F829EE /* ServerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2FA6BE08F7FB056600D566 /* ServerState.swift */; };
-		DCC3AF3C1E51B1AEAB433292 /* HomebrewInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C2C539CD56D6FE5098C2E0 /* HomebrewInstaller.swift */; };
-		DDA3166258DFCECC991E4048 /* SetupChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0051D127AF2D974E9B4AF010 /* SetupChecker.swift */; };
-		E815C96194751759109372DC /* ApfelAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */; };
 		E9F149D694C371AB32285A57 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3123F4D8603FDF19ED65F935 /* SettingsView.swift */; };
 		EED446B2553CAC940DF217EE /* ConversationTitleFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B034B194C3EEB2B725DF197E /* ConversationTitleFormatter.swift */; };
-		F2FD2986D0E72B5BC13C922E /* ApfelServerManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 027E847796A5528DA87B088F /* ApfelServerManagerTests.swift */; };
+		F1413C60EA0DC8BFEB5BB88F /* ModelAvailabilityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03FCF39BAAAF7F8E57D286A0 /* ModelAvailabilityState.swift */; };
 		F94925494A845F74316BE21A /* OptionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */; };
-		F9AB06D18550FED7485D1EB0 /* SetupChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0051D127AF2D974E9B4AF010 /* SetupChecker.swift */; };
-		FC105FD232632716A4A4A599 /* ApfelServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */; };
 		FDD7D4E0950186179B31C259 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B72F286E1DB285CD8808D6 /* TestSupport.swift */; };
 /* End PBXBuildFile section */
 
@@ -73,9 +68,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0051D127AF2D974E9B4AF010 /* SetupChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupChecker.swift; sourceTree = "<group>"; };
-		027E847796A5528DA87B088F /* ApfelServerManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelServerManagerTests.swift; sourceTree = "<group>"; };
+		03FCF39BAAAF7F8E57D286A0 /* ModelAvailabilityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelAvailabilityState.swift; sourceTree = "<group>"; };
 		08718FE68CCF160787C1F1BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0EC0A4E4B54C90BF4B7A02FB /* FoundationModelClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelClient.swift; sourceTree = "<group>"; };
 		1BC962889BF1CDC146537434 /* grapfelUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = grapfelUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2352A04E0067FFE6726B44E4 /* GlobalHotKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyTests.swift; sourceTree = "<group>"; };
 		270805843E27F2C1E268D6DF /* GlobalHotKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKey.swift; sourceTree = "<group>"; };
@@ -85,39 +80,36 @@
 		343C6D24A34C696D1F934AEF /* grapfel-statusbar-template.svg */ = {isa = PBXFileReference; path = "grapfel-statusbar-template.svg"; sourceTree = "<group>"; };
 		36AD23FD85460573F2639986 /* ConversationFeaturesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationFeaturesTests.swift; sourceTree = "<group>"; };
 		38583EC51D936B29873F377E /* grapfel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = grapfel.entitlements; sourceTree = "<group>"; };
-		3B30B0A3BD58961475DEEC3A /* ApfelAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelAPIClientTests.swift; sourceTree = "<group>"; };
-		41FB9F98D5B16DE244FC6C14 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		4B271BA07F5AD7CA38A53F7B /* HotKeyRecorderField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyRecorderField.swift; sourceTree = "<group>"; };
 		4B53DF7F8F79B3E5A184AB04 /* grapfel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = grapfel.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		4F07A321EB41688EFD0DB03C /* SetupCheckerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupCheckerTests.swift; sourceTree = "<group>"; };
 		51D782EB2BD93FEC2673C342 /* ConversationStoreRetentionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationStoreRetentionTests.swift; sourceTree = "<group>"; };
 		5E3127D7E44E8363FEE0F848 /* ConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationView.swift; sourceTree = "<group>"; };
 		6C2942A1EC41854ABFECB704 /* MarkdownSegmenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSegmenter.swift; sourceTree = "<group>"; };
-		7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelAPIClient.swift; sourceTree = "<group>"; };
+		6C52289C1CF853245FBBCD91 /* GenerationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationSettings.swift; sourceTree = "<group>"; };
+		718A48401023AB900D40AEE0 /* FoundationModelIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelIntegrationTests.swift; sourceTree = "<group>"; };
+		7C6A21A3DC258824432E9065 /* ModelUnavailableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelUnavailableView.swift; sourceTree = "<group>"; };
 		81D2BA4BB1AB70BAE99D1E76 /* ConversationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationStore.swift; sourceTree = "<group>"; };
 		85A92192171D0CCF4FB79DFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		863DDBB87F674E186B0A07A4 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		8827AE87C86AC8402972D3C1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		92C2C539CD56D6FE5098C2E0 /* HomebrewInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewInstaller.swift; sourceTree = "<group>"; };
 		997EC77C475EF15B1182C5EE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelServerManager.swift; sourceTree = "<group>"; };
 		99B9BDAB29393037E208C856 /* grapfelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = grapfelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9CE3E4A9DDBF85AE24B2BD96 /* GrapfelUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrapfelUITests.swift; sourceTree = "<group>"; };
 		A440FBBB3B277872C775101F /* ConversationExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationExporter.swift; sourceTree = "<group>"; };
 		B034B194C3EEB2B725DF197E /* ConversationTitleFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationTitleFormatter.swift; sourceTree = "<group>"; };
 		B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptInputView.swift; sourceTree = "<group>"; };
-		B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptionsTests.swift; sourceTree = "<group>"; };
-		CA2FA6BE08F7FB056600D566 /* ServerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerState.swift; sourceTree = "<group>"; };
+		BC4A983CE08BB03903115A72 /* SystemPromptPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPromptPreset.swift; sourceTree = "<group>"; };
 		CA60815030FE14D7C8505FB8 /* MarkdownSegmenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSegmenterTests.swift; sourceTree = "<group>"; };
 		CF01B5F456B39FEF134B4156 /* grapfel-icon-master.svg */ = {isa = PBXFileReference; path = "grapfel-icon-master.svg"; sourceTree = "<group>"; };
 		CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelTests.swift; sourceTree = "<group>"; };
+		D3C0A8BF8B7D2EA5AC4A2126 /* SystemPromptStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPromptStoreTests.swift; sourceTree = "<group>"; };
 		D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsPanel.swift; sourceTree = "<group>"; };
+		DD055033BE32671A876451AA /* FoundationModelClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelClientTests.swift; sourceTree = "<group>"; };
 		DF8C05B6625DA154792A56D7 /* grapfel-dist.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "grapfel-dist.entitlements"; sourceTree = "<group>"; };
 		E2B72F286E1DB285CD8808D6 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
+		E3877A91D38A40AFE7F5F233 /* GenerationSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationSettingsTests.swift; sourceTree = "<group>"; };
 		EAB64DD5E933F8A524749BB8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
-		F736F3FB827065B3C4816602 /* ApfelOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApfelOptions.swift; sourceTree = "<group>"; };
-		FBAB2B8B8FBC38A2CFE4E4DD /* HomebrewInstallerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewInstallerTests.swift; sourceTree = "<group>"; };
 		FD43659C91334DAF09CF30BF /* AppIcon-master.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-master.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -136,14 +128,11 @@
 		0C7383123C3F8BE31AFCA753 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				7FE67E2E028EF6F74437A021 /* ApfelAPIClient.swift */,
-				9987C9FB3B0865C19EC49510 /* ApfelServerManager.swift */,
 				A440FBBB3B277872C775101F /* ConversationExporter.swift */,
 				81D2BA4BB1AB70BAE99D1E76 /* ConversationStore.swift */,
 				B034B194C3EEB2B725DF197E /* ConversationTitleFormatter.swift */,
-				92C2C539CD56D6FE5098C2E0 /* HomebrewInstaller.swift */,
-				CA2FA6BE08F7FB056600D566 /* ServerState.swift */,
-				0051D127AF2D974E9B4AF010 /* SetupChecker.swift */,
+				0EC0A4E4B54C90BF4B7A02FB /* FoundationModelClient.swift */,
+				03FCF39BAAAF7F8E57D286A0 /* ModelAvailabilityState.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -201,10 +190,10 @@
 				997EC77C475EF15B1182C5EE /* ContentView.swift */,
 				5E3127D7E44E8363FEE0F848 /* ConversationView.swift */,
 				4B271BA07F5AD7CA38A53F7B /* HotKeyRecorderField.swift */,
+				7C6A21A3DC258824432E9065 /* ModelUnavailableView.swift */,
 				D75920C65E8428FC02FB2C48 /* OptionsPanel.swift */,
 				B79D7E8CB55E99E28DB8729A /* PromptInputView.swift */,
 				3123F4D8603FDF19ED65F935 /* SettingsView.swift */,
-				41FB9F98D5B16DE244FC6C14 /* SetupView.swift */,
 				2C768033B74411C7B29EEC80 /* SidebarView.swift */,
 			);
 			path = Views;
@@ -231,16 +220,15 @@
 		B74A2F1C7C3FFBBB5A2F19F6 /* grapfelTests */ = {
 			isa = PBXGroup;
 			children = (
-				3B30B0A3BD58961475DEEC3A /* ApfelAPIClientTests.swift */,
-				B8EFE5D7B6BB2245BB07609A /* ApfelOptionsTests.swift */,
-				027E847796A5528DA87B088F /* ApfelServerManagerTests.swift */,
 				CFAAFA5249957B4B53B5E19E /* ChatViewModelTests.swift */,
 				36AD23FD85460573F2639986 /* ConversationFeaturesTests.swift */,
 				51D782EB2BD93FEC2673C342 /* ConversationStoreRetentionTests.swift */,
+				DD055033BE32671A876451AA /* FoundationModelClientTests.swift */,
+				718A48401023AB900D40AEE0 /* FoundationModelIntegrationTests.swift */,
+				E3877A91D38A40AFE7F5F233 /* GenerationSettingsTests.swift */,
 				2352A04E0067FFE6726B44E4 /* GlobalHotKeyTests.swift */,
-				FBAB2B8B8FBC38A2CFE4E4DD /* HomebrewInstallerTests.swift */,
 				CA60815030FE14D7C8505FB8 /* MarkdownSegmenterTests.swift */,
-				4F07A321EB41688EFD0DB03C /* SetupCheckerTests.swift */,
+				D3C0A8BF8B7D2EA5AC4A2126 /* SystemPromptStoreTests.swift */,
 				E2B72F286E1DB285CD8808D6 /* TestSupport.swift */,
 			);
 			path = grapfelTests;
@@ -249,10 +237,11 @@
 		BA08C28F892A9E9030ED0DF9 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				F736F3FB827065B3C4816602 /* ApfelOptions.swift */,
 				F0D65EC0F011065EC06E39B4 /* ChatMessage.swift */,
+				6C52289C1CF853245FBBCD91 /* GenerationSettings.swift */,
 				270805843E27F2C1E268D6DF /* GlobalHotKey.swift */,
 				6C2942A1EC41854ABFECB704 /* MarkdownSegmenter.swift */,
+				BC4A983CE08BB03903115A72 /* SystemPromptPreset.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -388,12 +377,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E815C96194751759109372DC /* ApfelAPIClient.swift in Sources */,
-				102253BFB6B80A6D7499B7AE /* ApfelAPIClientTests.swift in Sources */,
-				699A3136C12715AB6209ECB6 /* ApfelOptions.swift in Sources */,
-				C4CE039D44D87DE693E31968 /* ApfelOptionsTests.swift in Sources */,
-				69497D84D9CAF16AA160129B /* ApfelServerManager.swift in Sources */,
-				F2FD2986D0E72B5BC13C922E /* ApfelServerManagerTests.swift in Sources */,
 				BF288E5D4FE9541DDB45B92B /* ChatMessage.swift in Sources */,
 				43B3076E0A6AF74881ED2C9B /* ChatViewModel.swift in Sources */,
 				57C4DDA1195B3B2409E1B197 /* ChatViewModelTests.swift in Sources */,
@@ -402,14 +385,17 @@
 				2448E02EDA0F1FB5C8D44604 /* ConversationStore.swift in Sources */,
 				516A5EDD4D1E5791F67719CF /* ConversationStoreRetentionTests.swift in Sources */,
 				EED446B2553CAC940DF217EE /* ConversationTitleFormatter.swift in Sources */,
+				18BBAE4C1B1D5DDB060CE34D /* FoundationModelClient.swift in Sources */,
+				71C98EABF725B97A4B2B2817 /* FoundationModelClientTests.swift in Sources */,
+				11C292DD737E2CFFFB28BAB5 /* FoundationModelIntegrationTests.swift in Sources */,
+				AACE34F34941985E9FD85D71 /* GenerationSettings.swift in Sources */,
+				327565C5A51B16D991835224 /* GenerationSettingsTests.swift in Sources */,
 				641CCEB1992B68C6381FCF08 /* GlobalHotKey.swift in Sources */,
 				98AE86ACBE853AD2BEF01B81 /* GlobalHotKeyTests.swift in Sources */,
-				DCC3AF3C1E51B1AEAB433292 /* HomebrewInstaller.swift in Sources */,
-				6E24F3917283F8A2DD1C2C8E /* HomebrewInstallerTests.swift in Sources */,
 				38B52BBFF5819F4F5954F122 /* MarkdownSegmenter.swift in Sources */,
 				BEE21DEE08C2FC5BEA0225DD /* MarkdownSegmenterTests.swift in Sources */,
-				DDA3166258DFCECC991E4048 /* SetupChecker.swift in Sources */,
-				4974608B6140C0D5D2742536 /* SetupCheckerTests.swift in Sources */,
+				CECD6329BC3836F8E000A36C /* SystemPromptPreset.swift in Sources */,
+				CE8D37FFF8B41BB9A0F14794 /* SystemPromptStoreTests.swift in Sources */,
 				FDD7D4E0950186179B31C259 /* TestSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -426,9 +412,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CD9575A8940A9D767B10191C /* ApfelAPIClient.swift in Sources */,
-				70B2BB5B3AEB14AAC9138B53 /* ApfelOptions.swift in Sources */,
-				FC105FD232632716A4A4A599 /* ApfelServerManager.swift in Sources */,
 				1E3765258397415995235C0F /* AppDelegate.swift in Sources */,
 				7AE4ABFB8A4F126D5CFCBA81 /* ChatMessage.swift in Sources */,
 				89D92788254FDE53AA885A21 /* ChatViewModel.swift in Sources */,
@@ -437,18 +420,19 @@
 				4028CF7A6167EE7793FBD9A9 /* ConversationStore.swift in Sources */,
 				939714853367FE99D7B47DC0 /* ConversationTitleFormatter.swift in Sources */,
 				4361F030CD6064C409CF5EF3 /* ConversationView.swift in Sources */,
+				83730C58D4E28B9B413364EF /* FoundationModelClient.swift in Sources */,
+				609BDD98712308314FEB13CB /* GenerationSettings.swift in Sources */,
 				579B1FC68F2A804A0EBF8F50 /* GlobalHotKey.swift in Sources */,
 				6564BAD04BDA9E8379DEF5E1 /* GrapfelApp.swift in Sources */,
-				700C7C563A38F184FBC34180 /* HomebrewInstaller.swift in Sources */,
 				1CAA954BE9C2799787584FBC /* HotKeyRecorderField.swift in Sources */,
 				477C7C4E1326C7C4F9635ACA /* MarkdownSegmenter.swift in Sources */,
+				F1413C60EA0DC8BFEB5BB88F /* ModelAvailabilityState.swift in Sources */,
+				3E991A87A185DEA3F6F5F787 /* ModelUnavailableView.swift in Sources */,
 				F94925494A845F74316BE21A /* OptionsPanel.swift in Sources */,
 				1EA3435E6DB7B94ED437B0A6 /* PromptInputView.swift in Sources */,
-				D9913C86D788066289F829EE /* ServerState.swift in Sources */,
 				E9F149D694C371AB32285A57 /* SettingsView.swift in Sources */,
-				F9AB06D18550FED7485D1EB0 /* SetupChecker.swift in Sources */,
-				AE12D604E5090BC6EF2A13C0 /* SetupView.swift in Sources */,
 				33C485DAB3449A54225EA4AD /* SidebarView.swift in Sources */,
+				C28268E5021A42630F42831E /* SystemPromptPreset.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

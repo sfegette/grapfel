@@ -8,6 +8,67 @@ struct MarkdownSegment: Identifiable, Equatable {
     let isCode: Bool
 }
 
+enum MarkdownBlockKind: Equatable {
+    case prose
+    case heading(level: Int)
+}
+
+struct MarkdownBlock: Equatable {
+    let text: String
+    let kind: MarkdownBlockKind
+}
+
+enum MarkdownBlockParser {
+    static func blocks(of source: String) -> [MarkdownBlock] {
+        var blocks: [MarkdownBlock] = []
+        var proseLines: [Substring] = []
+
+        func flushProse() {
+            let prose = proseLines
+                .joined(separator: "\n")
+                .trimmingCharacters(in: .newlines)
+            if !prose.isEmpty {
+                blocks.append(MarkdownBlock(text: prose, kind: .prose))
+            }
+            proseLines.removeAll(keepingCapacity: true)
+        }
+
+        for line in source.split(separator: "\n", omittingEmptySubsequences: false) {
+            if let heading = heading(from: line) {
+                flushProse()
+                blocks.append(heading)
+            } else {
+                proseLines.append(line)
+            }
+        }
+        flushProse()
+
+        return blocks.isEmpty
+            ? [MarkdownBlock(text: source, kind: .prose)]
+            : blocks
+    }
+
+    private static func heading(from line: Substring) -> MarkdownBlock? {
+        var markerEnd = line.startIndex
+        var level = 0
+        while markerEnd < line.endIndex, line[markerEnd] == "#" {
+            level += 1
+            markerEnd = line.index(after: markerEnd)
+        }
+
+        guard (1...6).contains(level),
+              markerEnd < line.endIndex,
+              line[markerEnd].isWhitespace
+        else { return nil }
+
+        let title = line[markerEnd...]
+            .drop(while: { $0.isWhitespace })
+            .trimmingCharacters(in: .whitespaces)
+        guard !title.isEmpty else { return nil }
+        return MarkdownBlock(text: title, kind: .heading(level: level))
+    }
+}
+
 enum MarkdownSegmenter {
     static func segments(of source: String) -> [MarkdownSegment] {
         var result: [MarkdownSegment] = []

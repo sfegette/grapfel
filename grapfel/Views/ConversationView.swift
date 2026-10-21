@@ -4,6 +4,8 @@ import SwiftUI
 
 /// Scrollable conversation thread — shows completed turns and the in-progress assistant response.
 struct ConversationView: View {
+    private static let bottomAnchorID = "conversation-bottom"
+
     let history: [ChatMessage]
     let streamingContent: String
     let isLoading: Bool
@@ -12,11 +14,15 @@ struct ConversationView: View {
     var canRegenerate: Bool = false
     var onRegenerate: (() -> Void)? = nil
     var onEditLast: (() -> Void)? = nil
+    @State private var pendingScrollTask: Task<Void, Never>?
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 10) {
+                // The conversation is capped at 200 messages. A non-lazy stack avoids a
+                // macOS SwiftUI invalidation gap when the thinking/streaming row is replaced
+                // by its completed row while the scroll position is changing.
+                VStack(alignment: .leading, spacing: 10) {
                     if history.isEmpty && !isLoading {
                         VStack(spacing: 10) {
                             Image(systemName: "sparkles")
@@ -30,7 +36,7 @@ struct ConversationView: View {
                                 .font(.caption)
                                 .foregroundStyle(.tertiary)
                                 .multilineTextAlignment(.center)
-                            Text("Prompts and attachments go only to your local apfel server on 127.0.0.1. Conversation storage stays on this Mac unless you export it.")
+                            Text("Prompts and attachments are processed through Apple's on-device Foundation Models framework. Conversation storage stays on this Mac unless you export it.")
                                 .font(.caption2)
                                 .foregroundStyle(.tertiary)
                                 .multilineTextAlignment(.center)
@@ -84,9 +90,8 @@ struct ConversationView: View {
                         }
                     }
 
-                    // In-progress assistant turn — rendered as plain Text while streaming
-                    // to avoid per-token MarkdownSegmenter re-parsing churn. Markdown is
-                    // only rendered for completed turns stored in `history`.
+                    // In-progress assistant turn uses the same Markdown renderer as a
+                    // completed turn, so formatting settles incrementally as syntax arrives.
                     if isLoading {
                         if streamingContent.isEmpty {
                             HStack(spacing: 6) {
@@ -104,24 +109,41 @@ struct ConversationView: View {
                         }
                     }
 
-                    Color.clear.frame(height: 1).id("bottom")
+                    Color.clear
+                        .frame(height: 1)
+                        .id(Self.bottomAnchorID)
                 }
                 .padding(12)
             }
             .onChange(of: history.count) {
-                withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo("bottom") }
+                scheduleBottomScroll(using: proxy)
             }
             .onChange(of: streamingContent) {
-                proxy.scrollTo("bottom")
+                scheduleBottomScroll(using: proxy)
+            }
+            .onChange(of: isLoading) {
+                scheduleBottomScroll(using: proxy)
             }
             .onAppear {
-                // Defer one run-loop cycle so LazyVStack items are laid out before scrollTo
-                DispatchQueue.main.async {
-                    proxy.scrollTo("bottom")
-                }
+                scheduleBottomScroll(using: proxy)
+            }
+            .onDisappear {
+                pendingScrollTask?.cancel()
+                pendingScrollTask = nil
             }
         }
         .background(.ultraThinMaterial, in: Rectangle())
+    }
+
+    private func scheduleBottomScroll(using proxy: ScrollViewProxy) {
+        pendingScrollTask?.cancel()
+        pendingScrollTask = Task { @MainActor in
+            // Let SwiftUI complete the current layout transaction before moving the viewport.
+            // Coalescing changes keeps token updates anchored without stacking animations.
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            proxy.scrollTo(Self.bottomAnchorID, anchor: .bottom)
+        }
     }
 }
 
@@ -181,9 +203,8 @@ private struct MessageRow: View, Equatable {
 
 // MARK: - Streaming bubble
 
-/// In-progress assistant response rendered as plain `Text` to avoid per-token
-/// `MarkdownSegmenter` re-parsing. Markdown formatting is applied only once the
-/// turn is complete and stored in `history` as a finished `MessageRow`.
+/// In-progress assistant response. Incomplete Markdown safely falls back to literal
+/// text, then adopts formatting as delimiters and block markers become complete.
 private struct StreamingBubble: View {
     let content: String
 
@@ -196,9 +217,7 @@ private struct StreamingBubble: View {
                 .padding(.horizontal, 12)
                 .accessibilityHidden(true)
 
-            Text(content)
-                .font(.body)
-                .textSelection(.enabled)
+            MarkdownContent(text: content)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 7)
@@ -288,7 +307,7 @@ private struct CopyButton: View {
 
 // MARK: - Native Markdown renderer
 
-/// Renders fenced code blocks with a monospace background; everything else via
+/// Renders fenced code blocks and ATX headings as blocks; everything else uses
 /// AttributedString inline Markdown (bold, italic, inline code, strikethrough, links).
 private struct MarkdownContent: View {
     let text: String
@@ -304,12 +323,40 @@ private struct MarkdownContent: View {
                         .padding(10)
                         .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
                 } else {
-                    Text(inlineMarkdown(segment.text))
-                        .font(.body)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    ForEach(
+                        Array(MarkdownBlockParser.blocks(of: segment.text).enumerated()),
+                        id: \.offset
+                    ) { _, block in
+                        switch block.kind {
+                        case .prose:
+                            markdownText(block.text)
+                                .font(.body)
+                        case .heading(let level):
+                            markdownText(block.text)
+                                .font(headingFont(for: level))
+                                .fontWeight(level <= 3 ? .bold : .semibold)
+                                .padding(.top, level <= 2 ? 4 : 2)
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    private func markdownText(_ raw: String) -> some View {
+        Text(inlineMarkdown(raw))
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func headingFont(for level: Int) -> Font {
+        switch level {
+        case 1: .title2
+        case 2: .title3
+        case 3: .headline
+        case 4: .subheadline
+        case 5: .body
+        default: .caption
         }
     }
 

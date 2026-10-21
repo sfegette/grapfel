@@ -11,7 +11,7 @@ class ChatViewModel {
     var history: [ChatMessage] = []       // completed user + assistant turns
     var streamingContent: String = ""     // in-progress assistant text (streaming only)
     var isLoading: Bool = false
-    var options: ApfelOptions
+    var options: GenerationSettings
     var attachedFiles: [URL] = []
     var finishReason: FinishReason = .stop
     var responseAnnotation: String? = nil // shown below last assistant response
@@ -21,7 +21,7 @@ class ChatViewModel {
         lastUsage.map { "\($0.totalTokens) tokens" }
     }
 
-    private let apiClient: any ApfelAPIClientProtocol
+    private let modelClient: any LanguageModelClientProtocol
     private let conversationStore: ConversationStore
     private let historyFileURL: URL?
     private let fileTextReader: (URL) -> String?
@@ -73,20 +73,23 @@ class ChatViewModel {
     }
 
     init(
-        apiClient: any ApfelAPIClientProtocol = ApfelAPIClient(),
+        modelClient: any LanguageModelClientProtocol = FoundationModelClient(),
         conversationStore: ConversationStore = .shared,
         historyFileURL: URL? = nil,
         fileTextReader: @escaping (URL) -> String? = ChatViewModel.defaultReadTextFile
     ) {
-        self.apiClient = apiClient
+        self.modelClient = modelClient
         self.conversationStore = conversationStore
         self.historyFileURL = historyFileURL
         self.fileTextReader = fileTextReader
 
         let ud = UserDefaults.standard
-        var opts = ApfelOptions.defaults
+        var opts = GenerationSettings.defaults
         if let t = ud.object(forKey: UserDefaultsKey.defaultTemperature) as? Double { opts.temperature = t }
         if let m = ud.object(forKey: UserDefaultsKey.defaultMaxTokens) as? Int      { opts.maxTokens = m }
+        opts.permissiveContentTransformations = ud.bool(
+            forKey: UserDefaultsKey.permissiveContentTransformations
+        )
         options = opts
 
         if historyFileURL != nil {
@@ -147,16 +150,28 @@ class ChatViewModel {
         messages.append(contentsOf: workingHistory.dropLast())
         messages.append(ChatMessage(role: .user, content: buildUserContent(prompt: trimmed, files: filesToAttach)))
 
+        // This is a global privacy/safety preference, so read it at send time rather than
+        // requiring an already-open chat panel to be recreated after Settings changes.
+        var requestSettings = options
+        requestSettings.permissiveContentTransformations = UserDefaults.standard.bool(
+            forKey: UserDefaultsKey.permissiveContentTransformations
+        )
+
         do {
             let assistantContent: String
             if options.streaming {
                 var streamRefusal: String? = nil
-                for try await event in apiClient.stream(messages: messages, options: options) {
+                for try await event in modelClient.stream(messages: messages, settings: requestSettings) {
                     switch event {
                     case .token(let chunk):
                         accumulatedAssistantContent += chunk
                         if isDisplayingTargetConversation() {
                             streamingContent = accumulatedAssistantContent
+                        }
+                    case .replacement(let content):
+                        accumulatedAssistantContent = content
+                        if isDisplayingTargetConversation() {
+                            streamingContent = content
                         }
                     case .done(let reason, let refusal):
                         if isDisplayingTargetConversation() {
@@ -173,7 +188,7 @@ class ChatViewModel {
                     ? (streamRefusal ?? "[Content filtered by on-device policy]")
                     : accumulatedAssistantContent
             } else {
-                let result = try await apiClient.complete(messages: messages, options: options)
+                let result = try await modelClient.complete(messages: messages, settings: requestSettings)
                 if isDisplayingTargetConversation() {
                     finishReason = result.finishReason
                     lastUsage = result.usage
@@ -188,20 +203,42 @@ class ChatViewModel {
                     : nil
             }
             workingHistory.append(ChatMessage(role: .assistant, content: assistantContent))
-        } catch ApfelError.rateLimited {
+        } catch LocalModelError.rateLimited {
             if isDisplayingTargetConversation() {
                 finishReason = .stop
                 responseAnnotation = nil
                 lastUsage = nil
             }
             workingHistory.append(ChatMessage(role: .assistant, content: "Apple Intelligence is busy — try again in a moment."))
-        } catch ApfelError.modelUnavailable {
+        } catch LocalModelError.deviceNotEligible,
+                LocalModelError.appleIntelligenceNotEnabled,
+                LocalModelError.modelNotReady {
             if isDisplayingTargetConversation() {
                 finishReason = .stop
                 responseAnnotation = nil
                 lastUsage = nil
             }
             workingHistory.append(ChatMessage(role: .assistant, content: "Apple Intelligence is not available. Check that it's enabled in System Settings → Apple Intelligence & Siri."))
+        } catch LocalModelError.contentFiltered(let explanation) {
+            if isDisplayingTargetConversation() {
+                finishReason = .contentFilter
+                responseAnnotation = nil
+                lastUsage = nil
+            }
+            workingHistory.append(ChatMessage(
+                role: .assistant,
+                content: explanation ?? "[Response blocked by on-device content policy]"
+            ))
+        } catch LocalModelError.contextWindowExceeded {
+            if isDisplayingTargetConversation() {
+                finishReason = .length
+                responseAnnotation = "The request exceeded the on-device model's context window."
+                lastUsage = nil
+            }
+            workingHistory.append(ChatMessage(
+                role: .assistant,
+                content: "This request is too large for the on-device model. Try removing an attachment or starting a new conversation."
+            ))
         } catch is CancellationError {
             if !accumulatedAssistantContent.isEmpty {
                 workingHistory.append(ChatMessage(role: .assistant, content: accumulatedAssistantContent))

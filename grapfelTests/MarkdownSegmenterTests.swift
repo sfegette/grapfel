@@ -1,6 +1,37 @@
 import XCTest
 
 final class MarkdownSegmenterTests: XCTestCase {
+    func testBlockParserExtractsATXHeadingLevels() {
+        let blocks = MarkdownBlockParser.blocks(of: """
+        Intro with **bold** text.
+
+        ### Third-level heading
+        Body text.
+        ###### Sixth-level heading
+        """)
+
+        XCTAssertEqual(blocks, [
+            MarkdownBlock(text: "Intro with **bold** text.", kind: .prose),
+            MarkdownBlock(text: "Third-level heading", kind: .heading(level: 3)),
+            MarkdownBlock(text: "Body text.", kind: .prose),
+            MarkdownBlock(text: "Sixth-level heading", kind: .heading(level: 6)),
+        ])
+    }
+
+    func testBlockParserKeepsIncompleteStreamingHeadingAsProse() {
+        XCTAssertEqual(
+            MarkdownBlockParser.blocks(of: "###"),
+            [MarkdownBlock(text: "###", kind: .prose)]
+        )
+    }
+
+    func testBlockParserDoesNotTreatSevenMarkersAsHeading() {
+        XCTAssertEqual(
+            MarkdownBlockParser.blocks(of: "####### Not a heading"),
+            [MarkdownBlock(text: "####### Not a heading", kind: .prose)]
+        )
+    }
+
     func testSegmentsSplitProseAndFencedCodeBlock() {
         let source = """
         Before

@@ -1,24 +1,24 @@
 import Foundation
 import XCTest
 
-final class MockApfelAPIClient: @unchecked Sendable, ApfelAPIClientProtocol {
+final class MockLanguageModelClient: @unchecked Sendable, LanguageModelClientProtocol {
     var completeResult = CompletionResult(content: "", finishReason: .stop, refusal: nil, usage: nil)
     var completeError: Error?
     var streamEvents: [StreamEvent] = []
     var streamError: Error?
     private(set) var capturedMessages: [ChatMessage] = []
-    private(set) var capturedOptions: ApfelOptions?
+    private(set) var capturedSettings: GenerationSettings?
 
-    func complete(messages: [ChatMessage], options: ApfelOptions) async throws -> CompletionResult {
+    func complete(messages: [ChatMessage], settings: GenerationSettings) async throws -> CompletionResult {
         capturedMessages = messages
-        capturedOptions = options
+        capturedSettings = settings
         if let completeError { throw completeError }
         return completeResult
     }
 
-    func stream(messages: [ChatMessage], options: ApfelOptions) -> AsyncThrowingStream<StreamEvent, Error> {
+    func stream(messages: [ChatMessage], settings: GenerationSettings) -> AsyncThrowingStream<StreamEvent, Error> {
         capturedMessages = messages
-        capturedOptions = options
+        capturedSettings = settings
         let events = streamEvents
         let error = streamError
 
@@ -36,57 +36,27 @@ final class MockApfelAPIClient: @unchecked Sendable, ApfelAPIClientProtocol {
     }
 }
 
-final class ControlledStreamApfelAPIClient: @unchecked Sendable, ApfelAPIClientProtocol {
+final class ControlledStreamLanguageModelClient: @unchecked Sendable, LanguageModelClientProtocol {
     private(set) var capturedMessages: [ChatMessage] = []
-    private(set) var capturedOptions: ApfelOptions?
+    private(set) var capturedSettings: GenerationSettings?
     var continuation: AsyncThrowingStream<StreamEvent, Error>.Continuation?
     var onStreamStarted: (() -> Void)?
 
-    func complete(messages: [ChatMessage], options: ApfelOptions) async throws -> CompletionResult {
+    func complete(messages: [ChatMessage], settings: GenerationSettings) async throws -> CompletionResult {
         capturedMessages = messages
-        capturedOptions = options
+        capturedSettings = settings
         return CompletionResult(content: "", finishReason: .stop, refusal: nil, usage: nil)
     }
 
-    func stream(messages: [ChatMessage], options: ApfelOptions) -> AsyncThrowingStream<StreamEvent, Error> {
+    func stream(messages: [ChatMessage], settings: GenerationSettings) -> AsyncThrowingStream<StreamEvent, Error> {
         capturedMessages = messages
-        capturedOptions = options
+        capturedSettings = settings
 
         return AsyncThrowingStream { continuation in
             self.continuation = continuation
             self.onStreamStarted?()
         }
     }
-}
-
-final class MockURLProtocol: URLProtocol {
-    nonisolated(unsafe) static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
-
-    override class func canInit(with request: URLRequest) -> Bool {
-        true
-    }
-
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-        request
-    }
-
-    override func startLoading() {
-        guard let handler = Self.requestHandler else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
-            return
-        }
-
-        do {
-            let (response, data) = try handler(request)
-            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-            client?.urlProtocol(self, didLoad: data)
-            client?.urlProtocolDidFinishLoading(self)
-        } catch {
-            client?.urlProtocol(self, didFailWithError: error)
-        }
-    }
-
-    override func stopLoading() {}
 }
 
 enum TestError: LocalizedError {
@@ -98,12 +68,6 @@ enum TestError: LocalizedError {
             return "Expected failure"
         }
     }
-}
-
-func makeMockSession() -> URLSession {
-    let config = URLSessionConfiguration.ephemeral
-    config.protocolClasses = [MockURLProtocol.self]
-    return URLSession(configuration: config)
 }
 
 func makeTemporaryDirectory() throws -> URL {
@@ -124,30 +88,4 @@ func makeTestUserDefaults() -> UserDefaults {
     let defaults = UserDefaults(suiteName: suiteName)!
     defaults.removePersistentDomain(forName: suiteName)
     return defaults
-}
-
-func requestBodyData(for request: URLRequest) -> Data? {
-    if let body = request.httpBody {
-        return body
-    }
-
-    guard let stream = request.httpBodyStream else {
-        return nil
-    }
-
-    stream.open()
-    defer { stream.close() }
-
-    let bufferSize = 4096
-    var data = Data()
-    let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-    defer { buffer.deallocate() }
-
-    while stream.hasBytesAvailable {
-        let read = stream.read(buffer, maxLength: bufferSize)
-        guard read > 0 else { break }
-        data.append(buffer, count: read)
-    }
-
-    return data.isEmpty ? nil : data
 }

@@ -39,8 +39,8 @@ final class ChatViewModelTests: XCTestCase {
 
     @MainActor
     func testSendWithEmptyPromptDoesNothing() async {
-        let client = MockApfelAPIClient()
-        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        let client = MockLanguageModelClient()
+        let vm = ChatViewModel(modelClient: client, historyFileURL: historyFileURL)
         vm.prompt = "   "
 
         await vm.send()
@@ -52,7 +52,7 @@ final class ChatViewModelTests: XCTestCase {
 
     @MainActor
     func testSendNonStreamingAppendsAssistantResponseAndPersistsHistory() async throws {
-        let client = MockApfelAPIClient()
+        let client = MockLanguageModelClient()
         client.completeResult = CompletionResult(
             content: "Hello back",
             finishReason: .length,
@@ -60,7 +60,7 @@ final class ChatViewModelTests: XCTestCase {
             usage: UsageInfo(promptTokens: 12, completionTokens: 34, totalTokens: 46)
         )
 
-        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        let vm = ChatViewModel(modelClient: client, historyFileURL: historyFileURL)
         vm.options.streaming = false
         vm.prompt = "hello"
 
@@ -82,10 +82,10 @@ final class ChatViewModelTests: XCTestCase {
 
     @MainActor
     func testSendErrorAppendsErrorMessageAndClearsTransientState() async {
-        let client = MockApfelAPIClient()
+        let client = MockLanguageModelClient()
         client.completeError = TestError.expectedFailure
 
-        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        let vm = ChatViewModel(modelClient: client, historyFileURL: historyFileURL)
         vm.options.streaming = false
         vm.prompt = "hello"
         vm.lastUsage = UsageInfo(promptTokens: 1, completionTokens: 1, totalTokens: 2)
@@ -135,14 +135,14 @@ final class ChatViewModelTests: XCTestCase {
 
     @MainActor
     func testSendIncludesTruncatedAttachmentContentWhenBudgetExceeded() async throws {
-        let client = MockApfelAPIClient()
+        let client = MockLanguageModelClient()
         client.completeResult = CompletionResult(content: "done", finishReason: .stop, refusal: nil, usage: nil)
 
         let fileURL = tempDirectory.appendingPathComponent("huge.txt")
         let oversizedText = String(repeating: "a", count: ChatViewModel.fileContentCharBudget + 500)
         try writeFile(at: fileURL, contents: oversizedText)
 
-        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        let vm = ChatViewModel(modelClient: client, historyFileURL: historyFileURL)
         vm.options.streaming = false
         vm.prompt = "summarize this"
         vm.attachedFiles = [fileURL]
@@ -160,23 +160,24 @@ final class ChatViewModelTests: XCTestCase {
 
     @MainActor
     func testSendStreamingCollectsTokensDoneEventAndUsage() async {
-        let client = MockApfelAPIClient()
+        let client = MockLanguageModelClient()
         let events: [StreamEvent] = [
             .token("Hel"),
-            .token("lo"),
+            .replacement("Help"),
+            .token("ful"),
             .done(finishReason: FinishReason.contentFilter, refusal: "Filtered"),
             .usage(UsageInfo(promptTokens: 3, completionTokens: 4, totalTokens: 7)),
         ]
         client.streamEvents = events
 
-        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        let vm = ChatViewModel(modelClient: client, historyFileURL: historyFileURL)
         vm.options.streaming = true
         vm.prompt = "hello"
 
         await vm.send()
 
         XCTAssertEqual(vm.history.count, 2)
-        XCTAssertEqual(vm.history[1].content, "Hello")
+        XCTAssertEqual(vm.history[1].content, "Helpful")
         XCTAssertEqual(vm.finishReason, FinishReason.contentFilter)
         XCTAssertEqual(vm.lastUsage, UsageInfo(promptTokens: 3, completionTokens: 4, totalTokens: 7))
         XCTAssertNil(vm.responseAnnotation)
@@ -184,11 +185,11 @@ final class ChatViewModelTests: XCTestCase {
 
     @MainActor
     func testStreamingCancellationPersistsPartialAssistantResponse() async {
-        let client = MockApfelAPIClient()
+        let client = MockLanguageModelClient()
         client.streamEvents = [.token("Partial")]
         client.streamError = CancellationError()
 
-        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        let vm = ChatViewModel(modelClient: client, historyFileURL: historyFileURL)
         vm.options.streaming = true
         vm.prompt = "hello"
 
@@ -205,10 +206,10 @@ final class ChatViewModelTests: XCTestCase {
 
     @MainActor
     func testStreamingCancellationWithoutAssistantTokensRemovesPendingUserMessage() async {
-        let client = MockApfelAPIClient()
+        let client = MockLanguageModelClient()
         client.streamError = CancellationError()
 
-        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        let vm = ChatViewModel(modelClient: client, historyFileURL: historyFileURL)
         vm.options.streaming = true
         vm.prompt = "hello"
 
@@ -224,10 +225,10 @@ final class ChatViewModelTests: XCTestCase {
 
     @MainActor
     func testSendErrorPersistsErrorConversationState() async {
-        let client = MockApfelAPIClient()
+        let client = MockLanguageModelClient()
         client.completeError = TestError.expectedFailure
 
-        let vm = ChatViewModel(apiClient: client, historyFileURL: historyFileURL)
+        let vm = ChatViewModel(modelClient: client, historyFileURL: historyFileURL)
         vm.options.streaming = false
         vm.prompt = "hello"
 
@@ -256,9 +257,9 @@ final class ChatViewModelTests: XCTestCase {
         store.save(second)
         store.activate(first.id)
 
-        let client = ControlledStreamApfelAPIClient()
+        let client = ControlledStreamLanguageModelClient()
 
-        let vm = ChatViewModel(apiClient: client, conversationStore: store)
+        let vm = ChatViewModel(modelClient: client, conversationStore: store)
         vm.loadConversation(first)
         vm.options.streaming = true
         vm.prompt = "hello"
@@ -303,8 +304,8 @@ final class ChatViewModelTests: XCTestCase {
         store.save(target)
         store.activate(target.id)
 
-        let client = ControlledStreamApfelAPIClient()
-        let vm = ChatViewModel(apiClient: client, conversationStore: store)
+        let client = ControlledStreamLanguageModelClient()
+        let vm = ChatViewModel(modelClient: client, conversationStore: store)
         vm.loadConversation(target)
         vm.options.streaming = true
         vm.prompt = "go"

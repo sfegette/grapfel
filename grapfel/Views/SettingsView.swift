@@ -2,18 +2,13 @@ import Carbon
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage(UserDefaultsKey.serverPort) private var serverPort = 11434
     @AppStorage(UserDefaultsKey.defaultTemperature) private var defaultTemperature = 1.0
     @AppStorage(UserDefaultsKey.defaultMaxTokens) private var defaultMaxTokens = 2048
-    @AppStorage(UserDefaultsKey.apfelBinaryPath) private var apfelBinaryPath = ""
 
     var body: some View {
         TabView {
-            GeneralTab(serverPort: $serverPort, apfelBinaryPath: $apfelBinaryPath)
+            GeneralTab()
                 .tabItem { Label("General", systemImage: "gear") }
-
-            MCPTab()
-                .tabItem { Label("Tools", systemImage: "hammer") }
 
             DefaultsTab(temperature: $defaultTemperature, maxTokens: $defaultMaxTokens)
                 .tabItem { Label("Defaults", systemImage: "slider.horizontal.3") }
@@ -27,20 +22,12 @@ struct SettingsView: View {
 }
 
 private struct GeneralTab: View {
-    @Binding var serverPort: Int
-    @Binding var apfelBinaryPath: String
-    @AppStorage(UserDefaultsKey.apfelPermissive) private var apfelPermissive = true
+    @AppStorage(UserDefaultsKey.permissiveContentTransformations)
+    private var permissiveContentTransformations = PermissiveContentTransformationsPolicy.defaultEnabled
     @AppStorage(UserDefaultsKey.globalHotKeyKeyCode) private var globalHotKeyKeyCode = Int(GlobalHotKey.default.keyCode)
     @AppStorage(UserDefaultsKey.globalHotKeyModifiers) private var globalHotKeyModifiers = Int(GlobalHotKey.default.carbonModifiers)
-    @State private var isRestarting = false
     @State private var hotKey = GlobalHotKey.default
     @State private var hotKeyMessage: String? = nil
-    private var serverState = ServerState.shared
-
-    init(serverPort: Binding<Int>, apfelBinaryPath: Binding<String>) {
-        self._serverPort = serverPort
-        self._apfelBinaryPath = apfelBinaryPath
-    }
 
     var body: some View {
         Form {
@@ -76,44 +63,13 @@ private struct GeneralTab: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            Section("apfel server") {
-                LabeledContent("port") {
-                    TextField("11434", value: $serverPort, format: .number)
-                        .frame(width: 80)
-                        .textFieldStyle(.roundedBorder)
-                }
-                LabeledContent("permissive mode") {
-                    Toggle("", isOn: $apfelPermissive)
+            Section("content policy") {
+                LabeledContent("permissive transformations") {
+                    Toggle("", isOn: $permissiveContentTransformations)
                         .toggleStyle(.switch)
                         .labelsHidden()
                 }
-                Text("disables content safety filtering for all requests — effective on restart")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Button {
-                    isRestarting = true
-                    Task {
-                        await serverState.restart()
-                        isRestarting = false
-                    }
-                } label: {
-                    if isRestarting {
-                        HStack(spacing: 6) {
-                            ProgressView().controlSize(.small)
-                            Text("Restarting…")
-                        }
-                    } else {
-                        Text("Restart Server")
-                    }
-                }
-                .disabled(isRestarting)
-            }
-            Section("binary") {
-                LabeledContent("path override") {
-                    TextField("/opt/homebrew/bin/apfel", text: $apfelBinaryPath)
-                        .textFieldStyle(.roundedBorder)
-                }
-                Text("leave blank to auto-detect from PATH")
+                Text("Off by default. Allows a narrower set of content transformations while Apple Intelligence's core safety protections remain active.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -123,64 +79,9 @@ private struct GeneralTab: View {
         .onAppear {
             hotKey = GlobalHotKey.stored()
         }
-    }
-}
-
-private struct MCPTab: View {
-    @State private var mcpPaths: [String] = []
-    @State private var newMCPPath: String = ""
-
-    var body: some View {
-        Form {
-            Section("MCP servers") {
-                if mcpPaths.isEmpty {
-                    Text("No MCP servers configured.")
-                        .foregroundStyle(.secondary)
-                        .font(.callout)
-                }
-                ForEach(mcpPaths, id: \.self) { path in
-                    HStack {
-                        Text(path)
-                            .font(.caption.monospaced())
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Spacer()
-                        Button {
-                            mcpPaths.removeAll { $0 == path }
-                            saveMCPPaths()
-                        } label: {
-                            Image(systemName: "minus.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                HStack {
-                    TextField("/path/to/mcp-server or https://…", text: $newMCPPath)
-                        .textFieldStyle(.roundedBorder)
-                    Button("Add") {
-                        let trimmed = newMCPPath.trimmingCharacters(in: .whitespaces)
-                        guard !trimmed.isEmpty, !mcpPaths.contains(trimmed) else { return }
-                        mcpPaths.append(trimmed)
-                        saveMCPPaths()
-                        newMCPPath = ""
-                    }
-                    .disabled(newMCPPath.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-                Text("apfel proxies tool calls through each configured MCP server — effective on restart")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+        .onChange(of: permissiveContentTransformations) {
+            ModelAvailabilityState.shared.refresh()
         }
-        .formStyle(.grouped)
-        .frame(height: 300)
-        .onAppear {
-            mcpPaths = UserDefaults.standard.array(forKey: UserDefaultsKey.mcpServers) as? [String] ?? []
-        }
-    }
-
-    private func saveMCPPaths() {
-        UserDefaults.standard.set(mcpPaths, forKey: UserDefaultsKey.mcpServers)
     }
 }
 
@@ -211,7 +112,6 @@ private struct DefaultsTab: View {
 
 private struct PrivacyTab: View {
     @AppStorage(UserDefaultsKey.retentionMode) private var retentionModeRaw = RetentionMode.unlimited.rawValue
-    @AppStorage(UserDefaultsKey.serverPort) private var serverPort = 11434
     @State private var draftRetentionModeRaw = RetentionMode.unlimited.rawValue
     @State private var pendingRetentionModeRaw: String? = nil
     @State private var showSessionOnlyConfirmation = false
@@ -224,6 +124,9 @@ private struct PrivacyTab: View {
             .appendingPathComponent("grapfel", isDirectory: true)
             .path ?? "~/Library/Application Support/grapfel"
     }
+    private var systemPromptPresetPath: String {
+        "\(appSupportPath)/system-prompts.json"
+    }
     private var sparkleFeedURL: String {
         Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String ?? "the configured Sparkle update feed"
     }
@@ -231,7 +134,7 @@ private struct PrivacyTab: View {
     var body: some View {
         Form {
             Section("what stays local") {
-                Text("Prompts, responses, and selected file contents are sent only to apfel over http://127.0.0.1:\(serverPort)/v1. grapfel does not send model prompts or attachments to OpenAI or another cloud LLM provider.")
+                Text("Prompts, responses, and selected file contents are processed by Apple's on-device Foundation Models framework. Grapfel does not send model prompts or attachments to an app-owned server or a third-party model provider.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -250,6 +153,12 @@ private struct PrivacyTab: View {
                 Text(retentionMode == .sessionOnly
                      ? "Conversations are never written to disk. History is lost when grapfel quits."
                      : "Conversations are stored in \(appSupportPath) with owner-only (0600/0700) permissions.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Section("saved system prompt presets") {
+                Text("Saved preset names and text are stored in \(systemPromptPresetPath) with owner-only (0600/0700) permissions. Presets are separate from conversation history, so changing its retention setting does not remove them. Delete a preset from its role or rules menu in the options panel.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

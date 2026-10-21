@@ -50,17 +50,6 @@
                ReferencedContainer = "container:grapfel.xcodeproj">
             </BuildableReference>
          </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "769E11985ADE9F32E09027FB"
-               BuildableName = "grapfelUITests.xctest"
-               BlueprintName = "grapfelUITests"
-               ReferencedContainer = "container:grapfel.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>
