@@ -81,6 +81,10 @@ private final class GrapfelPanel: NSPanel {
         panel.isOpaque = false
         panel.hasShadow = true
         panel.level = .popUpMenu
+        // NSPanel hides itself whenever the app is not active. When a menubar click or hotkey
+        // does not win activation (common on the first launch of an LSUIElement app), that
+        // would hide the panel before it is ever visible.
+        panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
         // sizingOptions = [] prevents the hosting view from auto-resizing the panel.
