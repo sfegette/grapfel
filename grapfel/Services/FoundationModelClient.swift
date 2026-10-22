@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import OSLog
 
 protocol LanguageModelClientProtocol: Sendable {
     func complete(messages: [ChatMessage], settings: GenerationSettings) async throws -> CompletionResult
@@ -154,6 +155,12 @@ struct FoundationModelClient: LanguageModelClientProtocol {
     }
 
     private func map(_ error: LanguageModelSession.GenerationError) async -> LocalModelError {
+        let mapped = await mapUnlogged(error)
+        AppLog.model.error("Generation failed: \(mapped.diagnosticCode, privacy: .public)")
+        return mapped
+    }
+
+    private func mapUnlogged(_ error: LanguageModelSession.GenerationError) async -> LocalModelError {
         switch error {
         case .exceededContextWindowSize:
             return .contextWindowExceeded
@@ -425,6 +432,22 @@ enum LocalModelError: LocalizedError, Equatable {
     case unsupportedLanguageOrLocale
     case invalidConversation
     case requestFailed(String)
+
+    /// Stable, content-free label safe to log and share.
+    var diagnosticCode: String {
+        switch self {
+        case .deviceNotEligible: "deviceNotEligible"
+        case .appleIntelligenceNotEnabled: "appleIntelligenceNotEnabled"
+        case .modelNotReady: "modelNotReady"
+        case .rateLimited: "rateLimited"
+        case .concurrentRequest: "concurrentRequest"
+        case .contextWindowExceeded: "contextWindowExceeded"
+        case .contentFiltered: "contentFiltered"
+        case .unsupportedLanguageOrLocale: "unsupportedLanguageOrLocale"
+        case .invalidConversation: "invalidConversation"
+        case .requestFailed: "requestFailed"
+        }
+    }
 
     var errorDescription: String? {
         switch self {
