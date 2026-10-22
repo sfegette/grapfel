@@ -29,7 +29,7 @@
     <key>NSHumanReadableCopyright</key>
     <string>© 2026 Brilliant Mindworks. All rights reserved.</string>
     <key>SUFeedURL</key>
-    <string>https://sfegette.github.io/grapfel/appcast.xml</string>
+    <string>https://updates.brilliantmindworks.com/grapfel/appcast.xml</string>
     <key>SUPublicEDKey</key>
     <string>doXX6TQnEIztQLAYzdn1SY/DAVCjjuCCT+fWwKa8mPI=</string>
     <key>SUEnableSystemProfiling</key>

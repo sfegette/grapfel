@@ -86,7 +86,7 @@ The on-device model has a finite context window. grapfel reserves a response flo
 
 Model prompts, responses, and selected file contents are passed directly to Apple's on-device Foundation Models framework. grapfel does not send them to an app-owned server or a third-party model provider.
 
-Sparkle uses the network to check the configured GitHub-hosted update feed and download updates. Attached files are opened read-only for the current request and are not copied into grapfel's storage.
+Sparkle uses the network to check the configured update feed and download updates. The update check is a plain HTTPS request; no system profile or prompt content is included. Attached files are opened read-only for the current request and are not copied into grapfel's storage.
 
 ## architecture
 
