@@ -32,5 +32,7 @@
     <string>https://sfegette.github.io/grapfel/appcast.xml</string>
     <key>SUPublicEDKey</key>
     <string>doXX6TQnEIztQLAYzdn1SY/DAVCjjuCCT+fWwKa8mPI=</string>
+    <key>SUEnableSystemProfiling</key>
+    <false/>
 </dict>
 </plist>
