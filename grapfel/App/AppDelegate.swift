@@ -240,11 +240,22 @@ private final class GrapfelPanel: NSPanel {
         )
         updateItem.target = updaterController
         menu.addItem(updateItem)
+        let diagnosticsItem = NSMenuItem(
+            title: "Copy Diagnostics",
+            action: #selector(copyDiagnostics),
+            keyEquivalent: ""
+        )
+        diagnosticsItem.target = self
+        menu.addItem(diagnosticsItem)
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Grapfel", action: #selector(quitApp), keyEquivalent: "q"))
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil
+    }
+
+    @objc private func copyDiagnostics() {
+        DiagnosticsReport.copyToPasteboard()
     }
 
     @objc private func quitApp() {

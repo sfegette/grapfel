@@ -81,6 +81,7 @@ targets:
       - grapfel/Services/ConversationExporter.swift
       - grapfel/Services/ConversationStore.swift
       - grapfel/Services/ConversationTitleFormatter.swift
+      - grapfel/Services/DiagnosticsReport.swift
       - grapfel/ViewModels/ChatViewModel.swift
     settings:
       base:
