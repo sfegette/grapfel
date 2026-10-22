@@ -72,6 +72,19 @@
                 sparkle:edSignature="em9WQ4Ata+EEor/R6k+ZTHu5sDYfSzkfJ5sHbndC+xdh0OJSSAK6SK/SkudnnHQUfZF1qZUSLFffPd+cv2Y+Cg=="
             />
         </item>
+        <item>
+            <title>Version 1.1.0</title>
+            <pubDate>Thu, 22 Oct 2026 14:35:10 -0700</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/sfegette/grapfel/releases/download/v1.1.0/grapfel-1.1.0-macos26.zip"
+                length="3695512"
+                type="application/octet-stream"
+                sparkle:edSignature="/RJ0HVWh1MQNh3Z+b5iIVxYlr/Oo+UZ9KviLD4ub9HWoYIK7dHcaHtr19CrKK2dkoNTXihZ+5lBEQNCRAKrZAg=="
+            />
+        </item>
         <!-- ITEMS_PLACEHOLDER -->
     </channel>
 </rss>
